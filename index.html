@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PANSOD Store</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="pinScreen" class="pin-overlay">
+    <div class="pin-modal">
+      <div class="pin-logo">PANSOD Store</div>
+      <p class="pin-subtitle" data-i18n="enterPin">Enter PIN to unlock</p>
+      <input type="password" id="pinInput" maxlength="6" inputmode="numeric" autocomplete="off" autofocus>
+      <div id="pinError" class="pin-error"></div>
+      <button class="btn btn-primary" id="pinSubmit" data-i18n="unlock">Unlock</button>
+    </div>
+  </div>
+
+  <div id="appMain" style="display:none">
+    <nav>
+      <div class="logo">PANSOD Store</div>
+      <div class="nav-tabs">
+        <button class="tab-btn active" data-tab="order" data-i18n="tabOrder">Take Order</button>
+        <button class="tab-btn" data-tab="graborder" data-i18n="tabGrabOrder">Grab Orders</button>
+        <button class="tab-btn" data-tab="sales" data-i18n="tabSales">Daily Sales</button>
+        <button class="tab-btn" data-tab="dailyreport" data-i18n="tabDailyReport">Daily Report</button>
+        <button class="tab-btn" data-tab="menuedit" data-i18n="tabMenuEdit">Menu Edit</button>
+      </div>
+      <button class="lang-btn" id="langToggle">TH</button>
+    </nav>
+
+    <main>
+      <section id="tab-order" class="tab-content active">
+        <div class="order-layout">
+          <div class="menu-panel">
+            <div class="category-bar" id="categoryBar"></div>
+            <div id="menuLoading" class="loading-spinner" style="display:none">Loading...</div>
+            <div class="menu-grid" id="menuGrid"></div>
+          </div>
+          <div class="cart-panel">
+            <h2 data-i18n="currentOrder">Current Order</h2>
+            <div class="cart-items" id="cartItems">
+              <p class="empty-cart" data-i18n="noItems">No items added</p>
+            </div>
+            <div class="promo-section" id="promoSection" style="display:none">
+              <label class="promo-toggle">
+                <input type="checkbox" id="promoCheck">
+                <span data-i18n="promoLabel">Onigiri Promo: 3=฿10 off, 5=฿20, 10=฿50</span>
+              </label>
+              <div class="promo-discount" id="promoDiscount"></div>
+            </div>
+            <div class="cart-summary" id="cartSummary"></div>
+            <div class="cart-total">
+              <span data-i18n="total">Total:</span>
+              <span id="cartTotal">฿0</span>
+            </div>
+            <button class="btn btn-primary" id="checkoutBtn" disabled data-i18n="checkout">Checkout (0)</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-graborder" class="tab-content">
+        <div class="go-header">
+          <h2 data-i18n="grabOrderTitle">Grab Order</h2>
+          <div class="go-header-right">
+            <span class="go-date" id="grabDate"></span>
+            <div class="go-order-nr">
+              <label data-i18n="grabOrderNr">No.</label>
+              <input type="text" id="grabOrderNr" placeholder="032" maxlength="10">
+            </div>
+          </div>
+        </div>
+        <div class="order-layout">
+          <div class="menu-panel">
+            <div class="category-bar" id="grabCatBar"></div>
+            <div class="menu-grid" id="grabMenuGrid"></div>
+          </div>
+          <div class="cart-panel">
+            <h2 data-i18n="currentOrder">Selected Items</h2>
+            <div class="cart-items" id="grabCartItems">
+              <p class="empty-cart" data-i18n="noItems">No items selected</p>
+            </div>
+            <button class="btn btn-primary btn-lg" id="grabSubmit" data-i18n="grabRecord">Record Grab Order (0)</button>
+          </div>
+        </div>
+        <h3 data-i18n="grabHistory">Today's Grab Orders</h3>
+        <div class="go-history" id="grabHistory"></div>
+      </section>
+
+      <section id="tab-sales" class="tab-content">
+        <div class="dr-header">
+          <h2 data-i18n="todaySales">Sales</h2>
+          <div class="dr-datepicker">
+            <input type="date" id="salesDate">
+            <button class="btn-small" id="salesLoad" data-i18n="drLoad">Load</button>
+          </div>
+        </div>
+        <div id="salesLoading" class="loading-spinner" style="display:none">Loading...</div>
+        <div class="sales-summary" id="salesSummary"></div>
+        <div class="sales-list" id="salesList"></div>
+      </section>
+
+      <section id="tab-dailyreport" class="tab-content">
+        <div class="dr-header">
+          <h2 data-i18n="dailyReport">Daily Report</h2>
+          <div class="dr-datepicker">
+            <input type="date" id="drDate">
+            <button class="btn-small" id="drLoad" data-i18n="drLoad">Load</button>
+          </div>
+        </div>
+        <div id="drLoading" class="loading-spinner" style="display:none">Loading...</div>
+        <div class="dr-summary" id="drSummary"></div>
+        <div class="dr-two-col">
+          <div class="dr-col">
+            <h3 data-i18n="topProducts">Top Selling Products</h3>
+            <div class="dr-top-products" id="drTopProducts"></div>
+          </div>
+          <div class="dr-col">
+            <h3 data-i18n="categoryBreakdown">Category Breakdown</h3>
+            <div class="dr-category" id="drCategory"></div>
+          </div>
+        </div>
+        <h3 data-i18n="salesByHour">Sales By Hour</h3>
+        <div class="dr-hourly" id="drHourly"></div>
+        <h3 data-i18n="insights">Daily Insights</h3>
+        <div class="dr-insights" id="drInsights"></div>
+        <h3 data-i18n="grabInsights">Grab Insights</h3>
+        <div class="dr-grab-insights" id="drGrabInsights"></div>
+      </section>
+
+      <section id="tab-menuedit" class="tab-content">
+        <h2 data-i18n="manageMenu">Manage Menu</h2>
+        <div class="menu-form" id="menuForm">
+          <input type="text" id="meName" placeholder="English name" data-i18n-placeholder="enPlaceholder">
+          <input type="text" id="meNameTh" placeholder="Thai name" data-i18n-placeholder="thPlaceholder">
+          <input type="number" id="mePrice" placeholder="Price" min="0">
+          <select id="meCat"></select>
+          <button class="btn btn-primary" id="meSaveBtn" data-i18n="addItem">Add Item</button>
+        </div>
+        <div id="menuEditLoading" class="loading-spinner" style="display:none">Saving...</div>
+        <div class="menu-list" id="menuList"></div>
+      </section>
+    </main>
+
+    <div id="orderTypeModal" class="modal-overlay" style="display:none">
+      <div class="modal">
+        <h2 data-i18n="selectOrderType">Order Type</h2>
+        <div class="payment-options">
+          <button class="payment-btn cash-btn" onclick="selectOrderType('dinein')">
+            <span class="payment-icon">🍽️</span>
+            <span class="payment-label" data-i18n="dineIn">Dine In</span>
+          </button>
+          <button class="payment-btn qr-btn" onclick="selectOrderType('takeaway')">
+            <span class="payment-icon">🛍️</span>
+            <span class="payment-label" data-i18n="takeAway">Take Away</span>
+          </button>
+        </div>
+        <button class="modal-cancel" onclick="closeOrderTypeModal()" data-i18n="cancel">Cancel</button>
+      </div>
+    </div>
+    <div id="paymentModal" class="modal-overlay" style="display:none">
+      <div class="modal">
+        <h2 data-i18n="selectPayment">Select Payment Method</h2>
+        <div class="payment-options">
+          <button class="payment-btn cash-btn" onclick="processPayment('cash')">
+            <span class="payment-icon">💵</span>
+            <span class="payment-label" data-i18n="cash">Cash</span>
+          </button>
+          <button class="payment-btn qr-btn" onclick="processPayment('qr')">
+            <span class="payment-icon">📱</span>
+            <span class="payment-label" data-i18n="qrPayment">QR Payment</span>
+          </button>
+        </div>
+        <button class="modal-cancel" onclick="closePaymentModal()" data-i18n="cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

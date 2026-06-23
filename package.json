@@ -1,0 +1,15 @@
+{
+  "name": "pansod-store",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PANSOD Store POS - Cloudflare Fullstack",
+  "scripts": {
+    "dev": "wrangler pages dev . --port 8788",
+    "deploy": "wrangler pages deploy",
+    "db:init": "wrangler d1 execute pansod-store-db --file=schema.sql",
+    "db:seed": "wrangler d1 execute pansod-store-db --file=seed.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^4.103.0"
+  }
+}
