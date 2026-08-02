@@ -113,6 +113,13 @@
       </section>
 
       <section id="tab-sales" class="tab-content">
+        <div class="dr-mode-bar" id="salesQuickBar">
+          <button class="dr-mode-btn active" data-range="today" onclick="setSalesRange(this)" data-i18n="salesToday">Today</button>
+          <button class="dr-mode-btn" data-range="yesterday" onclick="setSalesRange(this)" data-i18n="salesYesterday">Yesterday</button>
+          <button class="dr-mode-btn" data-range="last7" onclick="setSalesRange(this)" data-i18n="salesLast7">Last 7 Days</button>
+          <button class="dr-mode-btn" data-range="month" onclick="setSalesRange(this)" data-i18n="salesMonth">This Month</button>
+          <button class="dr-mode-btn" data-range="lastmonth" onclick="setSalesRange(this)" data-i18n="salesLastMonth">Last Month</button>
+        </div>
         <div class="dr-header">
           <h2 data-i18n="todaySales">Sales</h2>
           <div class="dr-datepicker">
@@ -219,6 +226,8 @@
     </div>
   </div>
 
-  <script src="script.js?v=2"></script>
+  <div id="printArea" class="print-area"></div>
+
+  <script src="script.js?v=3"></script>
 </body>
 </html>

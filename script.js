@@ -114,6 +114,26 @@ let i18n = {
     drGrabTotalOnigiri: 'Total Onigiri',
     drGrabTopProducts: 'Top Grab Items',
     drGrabLowProducts: 'Low Grab Items',
+    printBtn: 'Print',
+    printReceipt: 'RECEIPT',
+    printKitchen: 'KITCHEN ORDER',
+    printOrderNo: 'Order #',
+    printType: 'Type',
+    printPayment: 'Payment',
+    printDate: 'Date',
+    printTime: 'Time',
+    printItem: 'Item',
+    printAmount: 'Amount',
+    printSubtotal: 'Subtotal',
+    printDiscount: 'Discount',
+    printTotal: 'TOTAL',
+    printTagline: 'Onigiri • Sides • Drinks',
+    printThanks: 'Thank you! Please come again.',
+    salesToday: 'Today',
+    salesYesterday: 'Yesterday',
+    salesLast7: 'Last 7 Days',
+    salesMonth: 'This Month',
+    salesLastMonth: 'Last Month',
   },
   th: {
     tabOrder: 'รับออเดอร์', tabSales: 'ยอดขายวันนี้', tabMenuEdit: 'แก้ไขเมนู',
@@ -198,6 +218,26 @@ let i18n = {
     drGrabTotalOnigiri: 'ข้าวปั้นรวม',
     drGrabTopProducts: 'สินค้า Grab ขายดี',
     drGrabLowProducts: 'สินค้า Grab ขายน้อย',
+    printBtn: 'พิมพ์',
+    printReceipt: 'ใบเสร็จ',
+    printKitchen: 'ออเดอร์ครัว',
+    printOrderNo: 'ออเดอร์ #',
+    printType: 'ประเภท',
+    printPayment: 'การชำระ',
+    printDate: 'วันที่',
+    printTime: 'เวลา',
+    printItem: 'รายการ',
+    printAmount: 'ยอดเงิน',
+    printSubtotal: 'รวม',
+    printDiscount: 'ส่วนลด',
+    printTotal: 'รวมทั้งหมด',
+    printTagline: 'โอนิกิริ • เครื่องเคียง • เครื่องดื่ม',
+    printThanks: 'ขอบคุณครับ ยินดีต้อนรับอีกครั้ง',
+    salesToday: 'วันนี้',
+    salesYesterday: 'เมื่อวาน',
+    salesLast7: '7 วันที่ผ่านมา',
+    salesMonth: 'เดือนนี้',
+    salesLastMonth: 'เดือนที่แล้ว',
   }
 };
 
@@ -501,7 +541,7 @@ async function processPayment(method) {
     ? orderDateVal + 'T12:00:00+07:00'
     : todayStr + 'T' + hh + ':' + mm + ':' + ss + '+07:00';
   try {
-    await api('/api/orders/create', {
+    const data = await api('/api/orders/create', {
       items: items,
       orderType: pendingOrderType,
       paymentMethod: method,
@@ -509,6 +549,18 @@ async function processPayment(method) {
       discount: discount,
       finalTotal: total - discount,
       createdAt: createdAt || undefined
+    });
+    printOrderBoth({
+      id: data.id,
+      date: todayStr,
+      time: hh + ':' + mm,
+      items: items,
+      total: total,
+      discount: discount,
+      finalTotal: total - discount,
+      promoApplied: promoApplied,
+      orderType: pendingOrderType,
+      paymentMethod: method
     });
     cart = {};
     rCart();
@@ -523,12 +575,116 @@ function closePaymentModal() {
 
 // ========== SALES ==========
 
+let salesOrders = [];
+
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function prLine() { return '<div class="pr-line"></div>'; }
+
+function fmtOrderNo(id) { return '#' + String(id).slice(-6); }
+
+function receiptHTML(o) {
+  const payLabel = o.paymentMethod === 'cash' ? t('cash') : t('qrPayment');
+  const typeLabel = o.orderType === 'dinein' ? t('dineIn') : t('takeAway');
+  let itemsHTML = '';
+  o.items.forEach(function(it) {
+    itemsHTML += '<div class="pr-item"><div class="pr-item-name">' + esc(it.name) + '</div>'
+      + '<div class="pr-row"><span>' + it.qty + ' x ฿' + it.price + '</span><span>฿' + (it.qty * it.price) + '</span></div></div>';
+  });
+  let discRow = '';
+  if (o.promoApplied || o.discount > 0) {
+    discRow = '<div class="pr-row pr-disc"><span>' + t('printDiscount') + '</span><span>-฿' + o.discount + '</span></div>';
+  }
+  return '<div class="pr-receipt">'
+    + '<div class="pr-header"><div class="pr-store">PANSOD Store</div><div class="pr-sub">' + t('printTagline') + '</div></div>'
+    + prLine()
+    + '<div class="pr-row"><span>' + t('printOrderNo') + '</span><span>' + fmtOrderNo(o.id) + '</span></div>'
+    + '<div class="pr-row"><span>' + t('printDate') + '</span><span>' + o.date + '</span></div>'
+    + '<div class="pr-row"><span>' + t('printTime') + '</span><span>' + o.time + '</span></div>'
+    + '<div class="pr-row"><span>' + t('printType') + '</span><span>' + typeLabel + '</span></div>'
+    + '<div class="pr-row"><span>' + t('printPayment') + '</span><span>' + payLabel + '</span></div>'
+    + prLine()
+    + '<div class="pr-row pr-cols"><span>' + t('printItem') + '</span><span>' + t('printAmount') + '</span></div>'
+    + prLine()
+    + itemsHTML
+    + prLine()
+    + '<div class="pr-row"><span>' + t('printSubtotal') + '</span><span>฿' + o.total + '</span></div>'
+    + discRow
+    + '<div class="pr-row pr-total"><span>' + t('printTotal') + '</span><span>฿' + o.finalTotal + '</span></div>'
+    + prLine()
+    + '<div class="pr-footer">' + t('printThanks') + '</div>'
+    + '</div>';
+}
+
+function kitchenHTML(o) {
+  const typeLabel = o.orderType === 'dinein' ? t('dineIn') : t('takeAway');
+  let itemsHTML = '';
+  o.items.forEach(function(it) {
+    itemsHTML += '<div class="pr-row"><span class="pr-item-name">' + esc(it.name) + '</span><span class="pr-qty">x' + it.qty + '</span></div>';
+  });
+  return '<div class="pr-kitchen">'
+    + '<div class="pr-header"><div class="pr-store">' + t('printKitchen') + '</div><div class="pr-sub">PANSOD Store</div></div>'
+    + prLine()
+    + '<div class="pr-row"><span>' + t('printOrderNo') + '</span><span>' + fmtOrderNo(o.id) + '</span></div>'
+    + '<div class="pr-row"><span>' + t('printType') + '</span><span>' + typeLabel + '</span></div>'
+    + '<div class="pr-row"><span>' + t('printTime') + '</span><span>' + o.time + '</span></div>'
+    + prLine()
+    + itemsHTML
+    + prLine()
+    + '</div>';
+}
+
+function printOrderBoth(o) {
+  const area = document.getElementById('printArea');
+  if (!area) return;
+  const printOne = function(kind) {
+    area.innerHTML = kind === 'kitchen' ? kitchenHTML(o) : receiptHTML(o);
+    window.print();
+  };
+  printOne('kitchen');
+  setTimeout(function() { printOne('receipt'); }, 300);
+}
+
+function reprintOrder(id) {
+  const o = salesOrders.find(function(x) { return x.id === id; });
+  if (!o) return;
+  printOrderBoth(o);
+}
+
+function setSalesRange(btn) {
+  document.querySelectorAll('#salesQuickBar .dr-mode-btn').forEach(function(x) {
+    x.classList.remove('active');
+  });
+  btn.classList.add('active');
+  const range = btn.dataset.range;
+  const today = new Date();
+  let start, end;
+  if (range === 'yesterday') {
+    start = end = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+  } else if (range === 'last7') {
+    start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
+    end = today;
+  } else if (range === 'month') {
+    start = new Date(today.getFullYear(), today.getMonth(), 1);
+    end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  } else if (range === 'lastmonth') {
+    start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    end = new Date(today.getFullYear(), today.getMonth(), 0);
+  } else {
+    start = end = today;
+  }
+  document.getElementById('salesDate').value = fmtDate(start);
+  document.getElementById('salesEndDate').value = fmtDate(end);
+  rSales();
+}
+
 async function rSales(startDateStr, endDateStr) {
   try {
     const startDate = startDateStr || document.getElementById('salesDate').value || fmtDate(new Date());
     const endDate = endDateStr || document.getElementById('salesEndDate').value || startDate;
     document.getElementById('salesLoading').style.display = 'block';
     const ords = await api('/api/orders/list', { startDate: startDate, endDate: endDate });
+    salesOrders = ords;
     const se = document.getElementById('salesSummary');
     const le = document.getElementById('salesList');
     const tc = ords.length;
@@ -551,7 +707,7 @@ async function rSales(startDateStr, endDateStr) {
       let statusActions = '';
       if (st === 'pending') statusActions = "<button onclick=setOrderStatus(" + o.id + ",'preparing')>" + t('statusPreparing') + "</button><button class=sale-del onclick=setOrderStatus(" + o.id + ",'cancelled')>" + t('statusCancelled') + '</button>';
       else if (st === 'preparing') statusActions = "<button onclick=setOrderStatus(" + o.id + ",'completed')>" + t('statusCompleted') + "</button><button class=sale-del onclick=setOrderStatus(" + o.id + ",'cancelled')>" + t('statusCancelled') + '</button>';
-      d.innerHTML = '<span class=so-time>' + o.time + '</span><span class=so-items>' + is.join(', ') + '</span><span class=so-badges>' + badges + '</span><span class=so-rev>฿' + o.finalTotal + '</span><span class=sales-actions>' + statusActions + '<button onclick=editOrder(' + o.id + ')>' + t('edit') + '</button><button class=sale-del onclick=deleteOrder(' + o.id + ')>' + t('del') + '</button></span>';
+      d.innerHTML = '<span class=so-time>' + o.time + '</span><span class=so-items>' + is.join(', ') + '</span><span class=so-badges>' + badges + '</span><span class=so-rev>฿' + o.finalTotal + '</span><span class=sales-actions>' + statusActions + '<button onclick=editOrder(' + o.id + ')>' + t('edit') + '</button><button onclick=reprintOrder(' + o.id + ')>' + t('printBtn') + '</button><button class=sale-del onclick=deleteOrder(' + o.id + ')>' + t('del') + '</button></span>';
       le.appendChild(d);
     }
   } catch (e) {

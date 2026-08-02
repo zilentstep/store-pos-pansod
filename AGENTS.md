@@ -326,6 +326,7 @@ This file instructs the AI agent on how to build the PANSOD Store POS applicatio
 
 ## How to Work
 
+0. NEVER publish/deploy changes live until they are tested on localhost first. Always verify locally (dev server, API calls) before committing, pushing, or deploying. Only push/deploy after the user confirms.
 1. At the start of each phase, read the relevant context files again
 2. Present the phase to the user with what will be built and ask for approval
 3. After approval, implement the phase

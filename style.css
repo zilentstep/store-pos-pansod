@@ -339,3 +339,26 @@ h3{font-size:.95rem;margin-bottom:.5rem}
   .dr-summary{grid-template-columns:1fr 1fr}
   .dr-card .dr-card-value{font-size:1rem}
 }
+
+/* ===== PRINT ===== */
+.print-area{display:none}
+@media print{
+  body>*:not(.print-area){display:none!important}
+  body{margin:0;background:#fff}
+  .print-area{display:block;font-family:'Courier New',Courier,monospace;color:#000;width:74mm;margin:0 auto}
+  .pr-receipt,.pr-kitchen{padding:3mm 2mm;font-size:3.2mm;line-height:1.45}
+  .pr-header{text-align:center;margin-bottom:2mm}
+  .pr-store{font-size:5mm;font-weight:700;letter-spacing:.5px}
+  .pr-sub{font-size:3mm;margin-top:.5mm}
+  .pr-line{border-top:1px dashed #000;margin:1.6mm 0}
+  .pr-row{display:flex;justify-content:space-between;gap:2mm}
+  .pr-cols{font-weight:700}
+  .pr-item{margin-bottom:1.2mm}
+  .pr-item-name{font-weight:700}
+  .pr-total{font-size:4.2mm;font-weight:700;border-top:1px solid #000;padding-top:1mm;margin-top:1mm}
+  .pr-disc{font-weight:700}
+  .pr-footer{text-align:center;margin-top:2mm}
+  .pr-kitchen .pr-item-name{font-size:4mm}
+  .pr-kitchen .pr-qty{font-size:4mm;font-weight:700}
+  .pr-kitchen .pr-row{font-size:4mm;font-weight:700;margin-bottom:1mm}
+}
