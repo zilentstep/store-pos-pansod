@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS order_items (
 CREATE TABLE IF NOT EXISTS grab_orders (
   id INTEGER PRIMARY KEY,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  order_nr TEXT DEFAULT ''
+  order_nr TEXT DEFAULT '',
+  customer_type TEXT DEFAULT ''
 );
 
 -- Grab order line items
@@ -53,6 +54,7 @@ CREATE TABLE IF NOT EXISTS grab_order_items (
   grab_order_id INTEGER NOT NULL,
   item_name TEXT NOT NULL,
   qty INTEGER NOT NULL DEFAULT 1,
+  cat TEXT DEFAULT '',
   FOREIGN KEY (grab_order_id) REFERENCES grab_orders(id) ON DELETE CASCADE
 );
 

@@ -1,15 +1,21 @@
-/**
- * POST /api/report/daily
- * Returns daily report data for a given date
- * Body: { date: "YYYY-MM-DD" }
- * Response: { success: true, data: { ... } }
- */
+function toISO(d) {
+  const y = d.getFullYear();
+  const m = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
 
 export async function onRequest(context) {
   try {
     const { request, env } = context;
     const body = await request.json();
-    const date = body?.date || new Date().toISOString().split('T')[0];
+    const { startDate, endDate } = body;
+    if (!startDate || !endDate) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'startDate and endDate required' }),
+        { status: 400, headers: { 'content-type': 'application/json' } }
+      );
+    }
 
     // Load menu items once and cache
     const menuItemsMap = {};
@@ -17,10 +23,9 @@ export async function onRequest(context) {
     for (const m of allMenuItems.results) menuItemsMap[m.en_name] = m;
     function getMenu(enName) { return menuItemsMap[enName] || null; }
 
-    // --- In-store orders ---
     const orders = await env.DB.prepare(
-      `SELECT * FROM orders WHERE date(created_at) = ?`
-    ).bind(date).all();
+      `SELECT * FROM orders WHERE date(created_at) >= ? AND date(created_at) <= ?`
+    ).bind(startDate, endDate).all();
 
     const allOrderItems = [];
     for (const order of orders.results) {
@@ -30,10 +35,9 @@ export async function onRequest(context) {
       allOrderItems.push({ order, items: items.results });
     }
 
-    // --- Grab orders ---
     const grabOrders = await env.DB.prepare(
-      `SELECT * FROM grab_orders WHERE date(created_at) = ?`
-    ).bind(date).all();
+      `SELECT * FROM grab_orders WHERE date(created_at) >= ? AND date(created_at) <= ?`
+    ).bind(startDate, endDate).all();
 
     const allGrabItems = [];
     for (const go of grabOrders.results) {
@@ -43,7 +47,6 @@ export async function onRequest(context) {
       allGrabItems.push({ order: go, items: items.results });
     }
 
-    // --- Compute stats ---
     const totalOrders = orders.results.length;
     const totalRevenue = orders.results.reduce((s, o) => s + o.final_total, 0);
     const totalItems = allOrderItems.reduce((s, oi) =>
@@ -72,7 +75,6 @@ export async function onRequest(context) {
       }
     }
 
-    // --- Top selling products (in-store + grab) ---
     const productMap = {};
     for (const oi of allOrderItems) {
       for (const item of oi.items) {
@@ -85,14 +87,15 @@ export async function onRequest(context) {
       for (const item of gi.items) {
         if (!productMap[item.item_name]) productMap[item.item_name] = { qty: 0, rev: 0 };
         productMap[item.item_name].qty += item.qty;
+        const menuItem = getMenu(item.item_name);
+        productMap[item.item_name].rev += (menuItem?.price || 0) * item.qty;
       }
     }
 
     const topProducts = Object.entries(productMap)
-      .map(([name, data]) => ({ name, qty: data.qty, rev: data.rev }))
+      .map(([name, data]) => ({ name, qty: data.qty, rev: Math.round(data.rev) }))
       .sort((a, b) => b.qty - a.qty);
 
-    // --- Category breakdown (revenue only from in-store) ---
     const catBreakdown = { Onigiri: 0, Drinks: 0, Other: 0 };
     for (const oi of allOrderItems) {
       for (const item of oi.items) {
@@ -105,7 +108,6 @@ export async function onRequest(context) {
     }
     const catTotal = catBreakdown.Onigiri + catBreakdown.Drinks + catBreakdown.Other;
 
-    // --- Hourly sales ---
     const hourly = {};
     for (let h = 0; h < 24; h++) hourly[h] = { orders: 0, rev: 0 };
     for (const order of orders.results) {
@@ -115,7 +117,6 @@ export async function onRequest(context) {
       hourly[hr].rev += order.final_total;
     }
 
-    // --- Grab insights ---
     let oniQtyInGrab = 0;
     const grabProductMap = {};
     for (const gi of allGrabItems) {
@@ -138,7 +139,6 @@ export async function onRequest(context) {
     }
     const avgPcsPerBill = grabTotalOrders > 0 ? Math.round(grabTotalItems / grabTotalOrders) : 0;
 
-    // --- Grab top/low products ---
     const grabProducts = Object.entries(grabProductMap)
       .map(([name, data]) => ({ name, qty: data.qty }))
       .sort((a, b) => b.qty - a.qty);
@@ -146,38 +146,14 @@ export async function onRequest(context) {
     const grabLowProducts = grabProducts.slice(-5).reverse();
 
     const report = {
-      summary: {
-        totalRevenue,
-        totalOrders,
-        totalItems,
-        aov,
-        totalDiscount,
-        cashTotal,
-        qrTotal
-      },
-      grab: {
-        totalOrders: grabTotalOrders,
-        totalItems: grabTotalItems,
-        oldOrders: oldCount,
-        newOrders: newCount,
-        adsOrders: adsCount,
-        avgPcsPerBill: avgPcsPerBill,
-        totalOnigiri: oniQtyInGrab,
-        grabTopProducts,
-        grabLowProducts
-      },
+      summary: { totalRevenue, totalOrders, totalItems, aov, totalDiscount, cashTotal, qrTotal },
+      grab: { totalOrders: grabTotalOrders, totalItems: grabTotalItems, oldOrders: oldCount, newOrders: newCount, adsOrders: adsCount, avgPcsPerBill: avgPcsPerBill, totalOnigiri: oniQtyInGrab, grabTopProducts, grabLowProducts },
       topProducts,
-      categoryBreakdown: {
-        ...catBreakdown,
-        total: catTotal
-      },
+      categoryBreakdown: { ...catBreakdown, total: catTotal },
       hourly: Object.entries(hourly)
         .filter(([_, v]) => v.orders > 0)
         .map(([h, v]) => ({ hour: parseInt(h), orders: v.orders, rev: v.rev })),
-      grabInsights: {
-        totalItems: grabTotalItems,
-        avgOniPerOrder: avgOniPerGrab
-      }
+      grabInsights: { totalItems: grabTotalItems, avgOniPerOrder: avgOniPerGrab }
     };
 
     return new Response(

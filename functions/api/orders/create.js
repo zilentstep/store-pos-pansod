@@ -9,7 +9,7 @@ export async function onRequest(context) {
   try {
     const { request, env } = context;
     const body = await request.json();
-    const { items, orderType, paymentMethod, promoApplied, discount, finalTotal } = body;
+    const { items, orderType, paymentMethod, promoApplied, discount, finalTotal, createdAt: reqCreatedAt } = body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return new Response(
@@ -19,7 +19,10 @@ export async function onRequest(context) {
     }
 
     const orderId = Date.now();
-    const createdAt = new Date().toISOString();
+    const now = new Date();
+    const offset = 7 * 60;
+    const gmt7 = new Date(now.getTime() + offset * 60 * 1000);
+    const createdAt = reqCreatedAt || gmt7.toISOString().replace('Z', '+07:00');
 
     // Insert order
     await env.DB.prepare(

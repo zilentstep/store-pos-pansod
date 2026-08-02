@@ -1,7 +1,7 @@
 /**
  * POST /api/orders/list
- * Returns orders with items for a given date
- * Body: { date: "YYYY-MM-DD" }
+ * Returns orders with items for a given date or date range
+ * Body: { date: "YYYY-MM-DD" } or { startDate, endDate }
  * Response: { success: true, data: orders[] }
  */
 
@@ -9,12 +9,13 @@ export async function onRequest(context) {
   try {
     const { request, env } = context;
     const body = await request.json();
-    const date = body?.date || new Date().toISOString().split('T')[0];
+    const startDate = body?.startDate || body?.date || new Date().toISOString().split('T')[0];
+    const endDate = body?.endDate || startDate;
 
-    // Fetch orders for the date
+    // Fetch orders for the date range
     const orders = await env.DB.prepare(
-      `SELECT * FROM orders WHERE date(created_at) = ? ORDER BY id DESC`
-    ).bind(date).all();
+      `SELECT * FROM orders WHERE date(created_at) >= ? AND date(created_at) <= ? ORDER BY id DESC`
+    ).bind(startDate, endDate).all();
 
     const ordersWithItems = [];
 
@@ -23,9 +24,12 @@ export async function onRequest(context) {
         "SELECT id, item_name, qty, price FROM order_items WHERE order_id = ?"
       ).bind(order.id).all();
 
+      const dt = new Date(order.created_at.replace('+07:00', 'Z'));
+      const h = dt.getHours().toString().padStart(2, '0');
+      const m = dt.getMinutes().toString().padStart(2, '0');
       ordersWithItems.push({
         id: order.id,
-        time: new Date(order.created_at).toLocaleTimeString(),
+        time: h + ':' + m,
         items: items.results.map(i => ({
           name: i.item_name,
           qty: i.qty,

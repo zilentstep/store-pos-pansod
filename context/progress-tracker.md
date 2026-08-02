@@ -58,7 +58,9 @@ https://pansod-store.pages.dev
 
 - **2026-06-23**: Decided on Cloudflare Pages + Functions + D1 stack. Vanilla JS frontend (no framework) to match existing demo. Simple PIN auth stored in D1 settings table. Multi-device shared data via Cloudflare cloud infrastructure.
 - **2026-06-23**: API routes use POST with JSON body for consistency (Pages Functions expect POST for form-like simplicity). PIN is passed as `x-pin` header on every request.
+- **2026-06-27**: Added `customer_type` column to `grab_orders` table for tracking Old/New/Ads customers. Created `/api/report/range` for date range reports. All timestamps now use GMT+7 timezone. Added order date backdating for Take Order. Reports tab redesigned with Daily/Custom/Weekly/This Month/Last Month/Past 7 Days modes.
 
 ## Session Notes
 
 - Context files created from demo analysis and user requirements.
+- 2026-06-27: Major feature additions — grab order edit button, customer type tracking, order date backdating, date range reports with multiple presets, grab revenue in reports, GMT+7 timezone fix.

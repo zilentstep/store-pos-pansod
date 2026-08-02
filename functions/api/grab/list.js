@@ -22,10 +22,14 @@ export async function onRequest(context) {
         "SELECT id, item_name, qty FROM grab_order_items WHERE grab_order_id = ?"
       ).bind(order.id).all();
 
+      const dt = new Date(order.created_at.replace('+07:00', 'Z'));
+      const h = dt.getHours().toString().padStart(2, '0');
+      const m = dt.getMinutes().toString().padStart(2, '0');
       ordersWithItems.push({
         id: order.id,
-        time: new Date(order.created_at).toLocaleTimeString(),
+        time: h + ':' + m,
         orderNr: order.order_nr || '',
+        customerType: order.customer_type || '',
         items: items.results.map(i => ({
           name: i.item_name,
           qty: i.qty

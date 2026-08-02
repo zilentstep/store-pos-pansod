@@ -11,15 +11,16 @@ INSERT OR IGNORE INTO categories (id, en_name, th_name, sort_order) VALUES
 
 -- Default menu items
 INSERT OR IGNORE INTO menu_items (id, cat, en_name, th_name, price, sort_order) VALUES
-  ('salmon',   'Onigiri', 'Salmon Onigiri',         'ข้าวปั้นแซลมอน',     45, 1),
-  ('tuna',     'Onigiri', 'Tuna Mayo Onigiri',       'ข้าวปั้นทูน่า',        40, 2),
-  ('umeboshi', 'Onigiri', 'Umeboshi Onigiri',        'ข้าวปั้นบ๊วย',         35, 3),
-  ('teriyaki', 'Onigiri', 'Teriyaki Chicken Onigiri', 'ข้าวปั้นไก่เทริยากิ',  50, 4),
-  ('codroe',   'Onigiri', 'Spicy Cod Roe Onigiri',   'ข้าวปั้นมันกุ้ง',       48, 5),
-  ('veggie',   'Onigiri', 'Veggie Miso Onigiri',     'ข้าวปั้นผักมิโสะ',      38, 6),
-  ('misosoup', 'Sides',   'Miso Soup',               'ซุปมิโสะ',             25, 7),
-  ('edamame',  'Sides',   'Edamame',                 'ถั่วแระญี่ปุ่น',         30, 8),
-  ('salad',    'Sides',   'Seaweed Salad',           'ยำสาหร่าย',            35, 9),
-  ('greentea', 'Drinks',  'Green Tea',               'ชาเขียว',              20, 10),
-  ('ramune',   'Drinks',  'Ramune',                  'รามุเนะ',              25, 11),
-  ('water',    'Drinks',  'Water',                   'น้ำเปล่า',             15, 12);
+  ('salmon-teri',    'Onigiri', 'Salmon Teriyaki',     'แซลมอนเทอริยากิ',   49, 1),
+  ('braised-pork',   'Onigiri', 'Braised Pork',        'หมูฮ้อง',            49, 2),
+  ('saba-teri',      'Onigiri', 'Saba Teriyaki',       'ซาบะเทอริยากิ',      49, 3),
+  ('spicy-tobiko',   'Onigiri', 'Spicy Tobiko',        'ไข่กุ้งมาโยเผ็ด',    49, 4),
+  ('spicy-tuna',     'Onigiri', 'Spicy Tuna Mayo',     'ทูน่ามาโยเผ็ด',      49, 5),
+  ('tuna-mayo',      'Onigiri', 'Tuna Mayo',           'ทูน่ามาโย',          39, 6),
+  ('crab-stick',     'Onigiri', 'Crab Stick Mayo',     'ปูอัดมาโย',          39, 7),
+  ('basil-chicken',  'Onigiri', 'Basil Chicken',       'กะเพราไก่',         39, 8),
+  ('sweet-seaweed',  'Onigiri', 'Sweet Seaweed',       'ยำสาหร่าย',          39, 9),
+  ('shoyu',          'Onigiri', 'Shoyu',               'โชยุ',                5, 10),
+  ('water',          'Drinks',  'Water',               'น้ำเปล่า',           15, 11),
+  ('greentea',       'Drinks',  'Green Tea',           'ชาเขียว',            35, 12),
+  ('peach-tea',      'Drinks',  'Peach Tea',           'ชาพีช',              30, 13);

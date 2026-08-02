@@ -4,7 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PANSOD Store</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
+  <script>
+    (function() {
+      var d = new Date();
+      var today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      var ids = ['orderDate','salesDate','salesEndDate','drDate','drStartDate','drEndDate','grabDatePicker'];
+      ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.value = today;
+      });
+    })();
+  </script>
 </head>
 <body>
   <div id="pinScreen" class="pin-overlay">
@@ -24,7 +35,7 @@
         <button class="tab-btn active" data-tab="order" data-i18n="tabOrder">Take Order</button>
         <button class="tab-btn" data-tab="graborder" data-i18n="tabGrabOrder">Grab Orders</button>
         <button class="tab-btn" data-tab="sales" data-i18n="tabSales">Daily Sales</button>
-        <button class="tab-btn" data-tab="dailyreport" data-i18n="tabDailyReport">Daily Report</button>
+        <button class="tab-btn" data-tab="dailyreport" data-i18n="tabReports">Reports</button>
         <button class="tab-btn" data-tab="menuedit" data-i18n="tabMenuEdit">Menu Edit</button>
       </div>
       <button class="lang-btn" id="langToggle">TH</button>
@@ -32,6 +43,10 @@
 
     <main>
       <section id="tab-order" class="tab-content active">
+        <div class="order-datepicker">
+          <label data-i18n="orderDate">Order Date:</label>
+          <input type="date" id="orderDate">
+        </div>
         <div class="order-layout">
           <div class="menu-panel">
             <div class="category-bar" id="categoryBar"></div>
@@ -65,9 +80,8 @@
           <h2 data-i18n="grabOrderTitle">Grab Order</h2>
           <div class="go-header-right">
             <span class="go-date" id="grabDate"></span>
-            <div class="go-order-nr">
-              <label data-i18n="grabOrderNr">No.</label>
-              <input type="text" id="grabOrderNr" placeholder="032" maxlength="10">
+            <div class="go-datepicker">
+              <input type="date" id="grabDatePicker">
             </div>
           </div>
         </div>
@@ -81,6 +95,16 @@
             <div class="cart-items" id="grabCartItems">
               <p class="empty-cart" data-i18n="noItems">No items selected</p>
             </div>
+            <div class="go-order-nr">
+              <label data-i18n="grabOrderNr">No.</label>
+              <input type="text" id="grabOrderNr" maxlength="3" inputmode="numeric" pattern="[0-9]*" placeholder="001">
+            </div>
+            <div class="grab-customer-type">
+              <label data-i18n="customerType">Customer:</label>
+              <label class="ct-radio"><input type="checkbox" name="custType" value="old"> <span data-i18n="custOld">Old</span></label>
+              <label class="ct-radio"><input type="checkbox" name="custType" value="new"> <span data-i18n="custNew">New</span></label>
+              <label class="ct-radio"><input type="checkbox" name="custType" value="ads"> <span data-i18n="custAds">Ads</span></label>
+            </div>
             <button class="btn btn-primary btn-lg" id="grabSubmit" data-i18n="grabRecord">Record Grab Order (0)</button>
           </div>
         </div>
@@ -93,6 +117,8 @@
           <h2 data-i18n="todaySales">Sales</h2>
           <div class="dr-datepicker">
             <input type="date" id="salesDate">
+            <span>—</span>
+            <input type="date" id="salesEndDate">
             <button class="btn-small" id="salesLoad" data-i18n="drLoad">Load</button>
           </div>
         </div>
@@ -102,11 +128,27 @@
       </section>
 
       <section id="tab-dailyreport" class="tab-content">
+        <div class="dr-mode-bar">
+          <button class="dr-mode-btn active" data-mode="daily" onclick="switchReportMode(this)" data-i18n="drModeDaily">Daily</button>
+          <button class="dr-mode-btn" data-mode="custom" onclick="switchReportMode(this)" data-i18n="drModeCustom">Custom</button>
+          <button class="dr-mode-btn" data-mode="weekly" onclick="switchReportMode(this)" data-i18n="drModeWeekly">This Week</button>
+          <button class="dr-mode-btn" data-mode="month" onclick="switchReportMode(this)" data-i18n="drModeMonth">This Month</button>
+          <button class="dr-mode-btn" data-mode="lastmonth" onclick="switchReportMode(this)" data-i18n="drModeLastMonth">Last Month</button>
+          <button class="dr-mode-btn" data-mode="past7" onclick="switchReportMode(this)" data-i18n="drModePast7">Past 7 Days</button>
+        </div>
         <div class="dr-header">
-          <h2 data-i18n="dailyReport">Daily Report</h2>
-          <div class="dr-datepicker">
-            <input type="date" id="drDate">
-            <button class="btn-small" id="drLoad" data-i18n="drLoad">Load</button>
+          <h2 data-i18n="tabReports">Reports</h2>
+          <div class="dr-range-picker" id="drRangePicker">
+            <div class="dr-datepicker" id="drDailyPicker">
+              <input type="date" id="drDate">
+              <button class="btn-small" id="drLoad" data-i18n="drLoad">Load</button>
+            </div>
+            <div class="dr-datepicker" id="drCustomPicker" style="display:none">
+              <input type="date" id="drStartDate">
+              <span>—</span>
+              <input type="date" id="drEndDate">
+              <button class="btn-small" id="drRangeLoad" data-i18n="drLoad">Load</button>
+            </div>
           </div>
         </div>
         <div id="drLoading" class="loading-spinner" style="display:none">Loading...</div>
@@ -123,7 +165,7 @@
         </div>
         <h3 data-i18n="salesByHour">Sales By Hour</h3>
         <div class="dr-hourly" id="drHourly"></div>
-        <h3 data-i18n="insights">Daily Insights</h3>
+        <h3 data-i18n="insights">Insights</h3>
         <div class="dr-insights" id="drInsights"></div>
         <h3 data-i18n="grabInsights">Grab Insights</h3>
         <div class="dr-grab-insights" id="drGrabInsights"></div>
@@ -177,6 +219,6 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=2"></script>
 </body>
 </html>
