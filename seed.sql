@@ -7,7 +7,8 @@ INSERT OR IGNORE INTO settings (key, value) VALUES ('pin', '1234');
 INSERT OR IGNORE INTO categories (id, en_name, th_name, sort_order) VALUES
   (1, 'Onigiri', 'ข้าวปั้น', 1),
   (2, 'Sides', 'เครื่องเคียง', 2),
-  (3, 'Drinks', 'เครื่องดื่ม', 3);
+  (3, 'Drinks', 'เครื่องดื่ม', 3),
+  (4, 'Salad', 'สลัด', 4);
 
 -- Default menu items
 INSERT OR IGNORE INTO menu_items (id, cat, en_name, th_name, price, sort_order) VALUES

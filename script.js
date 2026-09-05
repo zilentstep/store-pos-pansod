@@ -21,6 +21,7 @@ let categories = ['Onigiri', 'Sides', 'Drinks'];
 let catKeys = { en: ['Onigiri', 'Sides', 'Drinks'], th: ['ข้าวปั้น', 'เครื่องเคียง', 'เครื่องดื่ม'] };
 let activeCat = null;
 let cart = {};
+let cartCustomer = null;
 let editingId = null;
 let pendingOrderType = 'dinein';
 
@@ -134,6 +135,43 @@ let i18n = {
     salesLast7: 'Last 7 Days',
     salesMonth: 'This Month',
     salesLastMonth: 'Last Month',
+    viewCart: 'View Cart ➔',
+    viewSelected: 'View Selected ➔',
+    tabCustomers: 'Customers & Loyalty',
+    search: 'Search',
+    redeemFreeOnigiri: '🎁 Redeem 10 pts (-1 Free Onigiri)',
+    memberPhone: 'Member Phone:',
+    custPhone: 'Phone:',
+    addCustomer: 'Add Member',
+    exportCsv: 'Export CSV',
+    totalMembers: 'Total Members',
+    totalPoints: 'Points in Circulation',
+    bdayThisMonth: 'Birthdays This Month',
+    filterAll: 'All Members',
+    filterBdayMonth: '🎂 Birthday This Month',
+    qrModalTitle: 'Customer Registration QR',
+    copyLink: 'Copy Link',
+    close: 'Close',
+    save: 'Save',
+    phone: 'Phone Number',
+    fullName: 'Full Name / Nickname',
+    birthday: 'Birthday',
+    sex: 'Gender',
+    female: 'Female',
+    male: 'Male',
+    unspecified: 'Unspecified',
+    adjustPoints: 'Adjust Points',
+    currentBalance: 'Current Balance:',
+    ptsUnit: 'pts',
+    pointDelta: 'Points to Add (+) or Deduct (-)',
+    reasonNote: 'Reason / Note',
+    pointsLedgerTitle: 'Points History',
+    history: 'History',
+    adjust: 'Adjust',
+    noCustomers: 'No customers found',
+    ptsEarned: 'Earned',
+    ptsRedeemed: 'Redeemed',
+    pointsDiscount: 'Points Redemption: -฿',
   },
   th: {
     tabOrder: 'รับออเดอร์', tabSales: 'ยอดขายวันนี้', tabMenuEdit: 'แก้ไขเมนู',
@@ -233,11 +271,43 @@ let i18n = {
     printTotal: 'รวมทั้งหมด',
     printTagline: 'โอนิกิริ • เครื่องเคียง • เครื่องดื่ม',
     printThanks: 'ขอบคุณครับ ยินดีต้อนรับอีกครั้ง',
-    salesToday: 'วันนี้',
-    salesYesterday: 'เมื่อวาน',
-    salesLast7: '7 วันที่ผ่านมา',
-    salesMonth: 'เดือนนี้',
-    salesLastMonth: 'เดือนที่แล้ว',
+    viewCart: 'ดูตะกร้า ➔',
+    viewSelected: 'ดูที่เลือก ➔',
+    tabCustomers: 'สมาชิกและแต้ม',
+    search: 'ค้นหา',
+    redeemFreeOnigiri: '🎁 ใช้ 10 แต้ม แลกข้าวปั้นฟรี 1 ชิ้น',
+    memberPhone: 'เบอร์สมาชิก:',
+    custPhone: 'เบอร์:',
+    addCustomer: 'เพิ่มสมาชิก',
+    exportCsv: 'ดาวน์โหลด CSV',
+    totalMembers: 'สมาชิกทั้งหมด',
+    totalPoints: 'แต้มสะสมรวม',
+    bdayThisMonth: 'เกิดเดือนนี้',
+    filterAll: 'สมาชิกทั้งหมด',
+    filterBdayMonth: '🎂 เกิดเดือนนี้',
+    qrModalTitle: 'QR Code สมัครสมาชิก',
+    copyLink: 'คัดลอกลิงก์',
+    close: 'ปิด',
+    save: 'บันทึก',
+    phone: 'เบอร์โทรศัพท์',
+    fullName: 'ชื่อ - นามสกุล',
+    birthday: 'วันเกิด',
+    sex: 'เพศ',
+    female: 'หญิง',
+    male: 'ชาย',
+    unspecified: 'ไม่ระบุ',
+    adjustPoints: 'ปรับแต้มสะสม',
+    currentBalance: 'แต้มปัจจุบัน:',
+    ptsUnit: 'แต้ม',
+    pointDelta: 'จำนวนแต้มที่เพิ่ม (+) หรือลด (-)',
+    reasonNote: 'เหตุผล / หมายเหตุ',
+    pointsLedgerTitle: 'ประวัติแต้มสะสม',
+    history: 'ประวัติ',
+    adjust: 'ปรับแต้ม',
+    noCustomers: 'ไม่พบข้อมูลสมาชิก',
+    ptsEarned: 'ได้รับ',
+    ptsRedeemed: 'ใช้แต้ม',
+    pointsDiscount: 'ใช้แต้มแลกฟรี: -฿',
   }
 };
 
@@ -420,6 +490,51 @@ function remC(id) {
 
 function gi(id) { return menuItems.find(function(i) { return i.id === id; }); }
 
+function getFreeOnigiriDiscount() {
+  let freePrice = 0;
+  for (const id of Object.keys(cart)) {
+    const item = gi(id);
+    if (item && item.cat === 'Onigiri' && cart[id] > 0) {
+      if (freePrice === 0 || item.price < freePrice) {
+        freePrice = item.price;
+      }
+    }
+  }
+  return freePrice;
+}
+
+async function searchCartCustomer() {
+  const input = document.getElementById('cartCustPhone');
+  if (!input) return;
+  const phone = input.value.trim();
+  if (!phone) {
+    alert('Please enter a phone number');
+    return;
+  }
+  try {
+    const cust = await api('/api/customers/lookup', { phone });
+    if (!cust) {
+      if (confirm('Member not found. Show QR code to register?')) {
+        showRegisterQrModal();
+      }
+      return;
+    }
+    cartCustomer = cust;
+    rCart();
+  } catch (e) {
+    alert(e.message || 'Lookup failed');
+  }
+}
+
+function clearCartCustomer() {
+  cartCustomer = null;
+  const phoneIn = document.getElementById('cartCustPhone');
+  if (phoneIn) phoneIn.value = '';
+  const redeemCheck = document.getElementById('cartRedeemCheck');
+  if (redeemCheck) redeemCheck.checked = false;
+  rCart();
+}
+
 function rCart() {
   const ct = document.getElementById('cartItems');
   const cb = document.getElementById('checkoutBtn');
@@ -427,16 +542,44 @@ function rCart() {
   const ps = document.getElementById('promoSection');
   const pc = document.getElementById('promoCheck');
   const pd = document.getElementById('promoDiscount');
+  const custInfo = document.getElementById('cartCustInfo');
+  const custNameEl = document.getElementById('cartCustName');
+  const custPtsEl = document.getElementById('cartCustPts');
+  const redeemSec = document.getElementById('cartRedeemSection');
+  const redeemCheck = document.getElementById('cartRedeemCheck');
+  const redeemVal = document.getElementById('cartRedeemVal');
+
+  if (cartCustomer) {
+    if (custInfo) custInfo.style.display = 'block';
+    if (custNameEl) custNameEl.textContent = cartCustomer.name;
+    if (custPtsEl) custPtsEl.textContent = '⭐ ' + (cartCustomer.points || 0) + ' ' + t('ptsUnit');
+
+    const oniCount = countOnigiri();
+    if ((cartCustomer.points || 0) >= 10 && oniCount >= 1) {
+      if (redeemSec) redeemSec.style.display = 'flex';
+      const freePrice = getFreeOnigiriDiscount();
+      if (redeemVal) redeemVal.textContent = '-฿' + freePrice;
+    } else {
+      if (redeemSec) redeemSec.style.display = 'none';
+      if (redeemCheck) redeemCheck.checked = false;
+    }
+  } else {
+    if (custInfo) custInfo.style.display = 'none';
+    if (redeemSec) redeemSec.style.display = 'none';
+    if (redeemCheck) redeemCheck.checked = false;
+  }
+
   if (!ct) return;
   const ids = Object.keys(cart);
   ct.innerHTML = '';
-  if (pc) pc.checked = false;
   if (!ids.length) {
     ct.innerHTML = '<p class=empty-cart>' + t('noItems') + '</p>';
     cb.disabled = true;
     cb.textContent = t('checkout') + ' (0)';
     te.textContent = '฿0';
-    ps.style.display = 'none';
+    if (ps) ps.style.display = 'none';
+    const mobBar = document.getElementById('mobileCartBar');
+    if (mobBar) mobBar.style.display = 'none';
     return;
   }
   cb.disabled = false;
@@ -455,13 +598,33 @@ function rCart() {
   });
   const oc = countOnigiri();
   if (oc >= 3) {
-    ps.style.display = 'block';
-    pd.textContent = '';
+    if (ps) ps.style.display = 'block';
+    if (pd) pd.textContent = '';
   } else {
-    ps.style.display = 'none';
+    if (ps) ps.style.display = 'none';
   }
   rPromo(total);
   rCartSummary();
+  const mobBar = document.getElementById('mobileCartBar');
+  const totalItems = cartTotalItems();
+  if (mobBar) {
+    if (totalItems > 0) {
+      mobBar.style.display = 'flex';
+      document.getElementById('mobileCartSummaryText').textContent = totalItems + ' items • ' + (te ? te.textContent : '฿0');
+    } else {
+      mobBar.style.display = 'none';
+    }
+  }
+}
+
+function scrollToCart() {
+  const panel = document.querySelector('#tab-order .cart-panel');
+  if (panel) panel.scrollIntoView({ behavior: 'smooth' });
+}
+
+function scrollToGrabCart() {
+  const panel = document.querySelector('#tab-graborder .cart-panel');
+  if (panel) panel.scrollIntoView({ behavior: 'smooth' });
 }
 
 function rCartSummary() {
@@ -479,24 +642,55 @@ function rPromo(baseTotal) {
   const pd = document.getElementById('promoDiscount');
   const te = document.getElementById('cartTotal');
   const cb = document.getElementById('checkoutBtn');
+  const redeemCheck = document.getElementById('cartRedeemCheck');
   const oc = countOnigiri();
-  if (oc >= 3 && pc.checked) {
-    const disc = calcPromo(oc);
-    const after = baseTotal - disc;
-    pd.textContent = t('promoDiscount') + disc + ' (฿' + after + ')';
-    te.textContent = '฿' + after;
-  } else {
-    pd.textContent = '';
-    te.textContent = '฿' + baseTotal;
+
+  let promoDisc = 0;
+  if (oc >= 3 && pc && pc.checked) {
+    promoDisc = calcPromo(oc);
   }
-  cb.textContent = t('checkout') + ' (' + Object.keys(cart).reduce(function(s, id) { return s + cart[id]; }, 0) + ')';
+
+  let redeemDisc = 0;
+  if (redeemCheck && redeemCheck.checked && cartCustomer && (cartCustomer.points || 0) >= 10 && oc >= 1) {
+    redeemDisc = getFreeOnigiriDiscount();
+  }
+
+  const totalDisc = promoDisc + redeemDisc;
+  const after = Math.max(0, baseTotal - totalDisc);
+
+  const discTexts = [];
+  if (promoDisc > 0) discTexts.push(t('promoDiscount') + promoDisc);
+  if (redeemDisc > 0) discTexts.push(t('pointsDiscount') + redeemDisc);
+
+  if (pd) {
+    if (discTexts.length > 0) {
+      pd.textContent = discTexts.join(' • ') + ' (฿' + after + ')';
+    } else {
+      pd.textContent = '';
+    }
+  }
+
+  if (te) te.textContent = '฿' + after;
+  if (cb) cb.textContent = t('checkout') + ' (' + Object.keys(cart).reduce(function(s, id) { return s + cart[id]; }, 0) + ')';
 }
 
-document.getElementById('promoCheck').onchange = function() {
-  const ids = Object.keys(cart);
-  const total = ids.reduce(function(s, id) { return s + gi(id).price * cart[id]; }, 0);
-  rPromo(total);
-};
+const promoCheckEl = document.getElementById('promoCheck');
+if (promoCheckEl) {
+  promoCheckEl.onchange = function() {
+    const ids = Object.keys(cart);
+    const total = ids.reduce(function(s, id) { return s + gi(id).price * cart[id]; }, 0);
+    rPromo(total);
+  };
+}
+
+const redeemCheckEl = document.getElementById('cartRedeemCheck');
+if (redeemCheckEl) {
+  redeemCheckEl.onchange = function() {
+    const ids = Object.keys(cart);
+    const total = ids.reduce(function(s, id) { return s + gi(id).price * cart[id]; }, 0);
+    rPromo(total);
+  };
+}
 
 function checkout() {
   const ids = Object.keys(cart);
@@ -518,12 +712,23 @@ async function processPayment(method) {
   document.getElementById('paymentModal').style.display = 'none';
   const ids = Object.keys(cart);
   let total = ids.reduce(function(s, id) { return s + gi(id).price * cart[id]; }, 0);
-  let discount = 0;
+  let promoDiscount = 0;
   let promoApplied = false;
-  if (document.getElementById('promoCheck').checked) {
-    discount = calcPromo(countOnigiri());
+  if (document.getElementById('promoCheck')?.checked) {
+    promoDiscount = calcPromo(countOnigiri());
     promoApplied = true;
   }
+
+  let redeemDiscount = 0;
+  let pointsRedeemed = 0;
+  const redeemCheck = document.getElementById('cartRedeemCheck');
+  if (redeemCheck && redeemCheck.checked && cartCustomer && (cartCustomer.points || 0) >= 10 && countOnigiri() >= 1) {
+    redeemDiscount = getFreeOnigiriDiscount();
+    pointsRedeemed = 10;
+  }
+
+  const totalDiscount = promoDiscount + redeemDiscount;
+
   const items = ids.map(function(id) {
     const item = gi(id);
     return { name: item.en, qty: cart[id], price: item.price };
@@ -546,26 +751,17 @@ async function processPayment(method) {
       orderType: pendingOrderType,
       paymentMethod: method,
       promoApplied: promoApplied,
-      discount: discount,
-      finalTotal: total - discount,
+      discount: totalDiscount,
+      finalTotal: Math.max(0, total - totalDiscount),
+      customerId: cartCustomer ? cartCustomer.id : null,
+      pointsRedeemed: pointsRedeemed,
       createdAt: createdAt || undefined
     });
-    printOrderBoth({
-      id: data.id,
-      date: todayStr,
-      time: hh + ':' + mm,
-      items: items,
-      total: total,
-      discount: discount,
-      finalTotal: total - discount,
-      promoApplied: promoApplied,
-      orderType: pendingOrderType,
-      paymentMethod: method
-    });
     cart = {};
+    clearCartCustomer();
     rCart();
   } catch (e) {
-    alert('Failed to save order');
+    alert(e.message || 'Failed to save order');
   }
 }
 
@@ -595,6 +791,13 @@ function receiptHTML(o) {
   if (o.promoApplied || o.discount > 0) {
     discRow = '<div class="pr-row pr-disc"><span>' + t('printDiscount') + '</span><span>-฿' + o.discount + '</span></div>';
   }
+  let memberRow = '';
+  if (o.customerName) {
+    let ptsText = '';
+    if (o.pointsEarned > 0) ptsText += ' (+' + o.pointsEarned + ' pts)';
+    if (o.pointsRedeemed > 0) ptsText += ' (-' + o.pointsRedeemed + ' pts)';
+    memberRow = '<div class="pr-row"><span>' + t('memberPhone') + '</span><span>' + esc(o.customerName) + ptsText + '</span></div>';
+  }
   return '<div class="pr-receipt">'
     + '<div class="pr-header"><div class="pr-store">PANSOD Store</div><div class="pr-sub">' + t('printTagline') + '</div></div>'
     + prLine()
@@ -603,6 +806,7 @@ function receiptHTML(o) {
     + '<div class="pr-row"><span>' + t('printTime') + '</span><span>' + o.time + '</span></div>'
     + '<div class="pr-row"><span>' + t('printType') + '</span><span>' + typeLabel + '</span></div>'
     + '<div class="pr-row"><span>' + t('printPayment') + '</span><span>' + payLabel + '</span></div>'
+    + memberRow
     + prLine()
     + '<div class="pr-row pr-cols"><span>' + t('printItem') + '</span><span>' + t('printAmount') + '</span></div>'
     + prLine()
@@ -637,12 +841,8 @@ function kitchenHTML(o) {
 function printOrderBoth(o) {
   const area = document.getElementById('printArea');
   if (!area) return;
-  const printOne = function(kind) {
-    area.innerHTML = kind === 'kitchen' ? kitchenHTML(o) : receiptHTML(o);
-    window.print();
-  };
-  printOne('kitchen');
-  setTimeout(function() { printOne('receipt'); }, 300);
+  area.innerHTML = kitchenHTML(o) + '<div class="pr-page-break"></div>' + receiptHTML(o);
+  window.print();
 }
 
 function reprintOrder(id) {
@@ -701,6 +901,9 @@ async function rSales(startDateStr, endDateStr) {
       for (let j = 0; j < o.items.length; j++) is.push(o.items[j].qty + 'x ' + o.items[j].name);
       let badges = "<span class='so-badge " + (o.orderType || 'dinein') + "'>" + ((o.orderType || 'dinein') === 'dinein' ? t('dineIn') : t('takeAway')) + '</span>';
       badges += "<span class='so-badge " + (o.paymentMethod || 'cash') + "'>" + ((o.paymentMethod || 'cash') === 'cash' ? t('cash') : t('qrPayment')) + '</span>';
+      if (o.customerName) badges += "<span class='so-badge' style='background:#fef3c7;color:#92400e'>👤 " + esc(o.customerName) + '</span>';
+      if (o.pointsRedeemed > 0) badges += "<span class='so-badge' style='background:#fee2e2;color:#991b1b'>-" + o.pointsRedeemed + " pts</span>";
+      if (o.pointsEarned > 0) badges += "<span class='so-badge' style='background:#dcfce7;color:#166534'>+" + o.pointsEarned + " pts</span>";
       if (o.promoApplied) badges += "<span class='so-badge promo'>Promo -฿" + o.discount + '</span>';
       const st = o.status || 'pending';
       badges += "<span class='so-badge " + st + "'>" + t('status' + st.charAt(0).toUpperCase() + st.slice(1)) + '</span>';
@@ -1199,6 +1402,8 @@ function rGrabCart() {
   if (!ids.length) {
     ct.innerHTML = '<p class=empty-cart>' + t('noItems') + '</p>';
     sb.textContent = t('grabRecord') + ' (0)';
+    const mobGrabBar = document.getElementById('mobileGrabBar');
+    if (mobGrabBar) mobGrabBar.style.display = 'none';
     return;
   }
   let totalQty = 0;
@@ -1214,6 +1419,15 @@ function rGrabCart() {
     ct.appendChild(d);
   });
   sb.textContent = t('grabRecord') + ' (' + totalQty + ')';
+  const mobGrabBar = document.getElementById('mobileGrabBar');
+  if (mobGrabBar) {
+    if (totalQty > 0) {
+      mobGrabBar.style.display = 'flex';
+      document.getElementById('mobileGrabSummaryText').textContent = totalQty + ' items selected';
+    } else {
+      mobGrabBar.style.display = 'none';
+    }
+  }
 }
 
 async function rGrabHistory(dateStr) {
@@ -1286,10 +1500,21 @@ document.getElementById('grabSubmit').onclick = async function() {
   if (!orderNr) { alert('Please enter an order number'); return; }
   if (!custChecks.length) { alert('Please select at least one customer type'); return; }
   const customerType = Array.from(custChecks).map(function(c) { return c.value; }).join(',');
+  
+  const grabPhone = (document.getElementById('grabCustPhone')?.value || '').trim();
+  let grabCustId = null;
+  if (grabPhone) {
+    try {
+      const cust = await api('/api/customers/lookup', { phone: grabPhone });
+      if (cust) grabCustId = cust.id;
+    } catch (e) {}
+  }
+
   try {
-    await api('/api/grab/create', { items: items, orderNr: orderNr, customerType: customerType });
+    await api('/api/grab/create', { items: items, orderNr: orderNr, customerType: customerType, customerId: grabCustId });
     grabCart = {};
     document.getElementById('grabOrderNr').value = '';
+    if (document.getElementById('grabCustPhone')) document.getElementById('grabCustPhone').value = '';
     document.querySelectorAll('input[name="custType"]').forEach(function(c) { c.checked = false; });
     rGrabCart();
     rGrabHistory();
@@ -1297,6 +1522,320 @@ document.getElementById('grabSubmit').onclick = async function() {
     alert('Failed to record grab order');
   }
 };
+
+// ========== CUSTOMERS & LOYALTY ==========
+
+let allCustomers = [];
+
+async function loadCustomers() {
+  const loading = document.getElementById('custLoading');
+  if (loading) loading.style.display = 'block';
+  try {
+    const res = await api('/api/customers/list', {});
+    allCustomers = res.customers || [];
+    rCustomers();
+  } catch (e) {
+    alert(e.message || 'Failed to load customers');
+  } finally {
+    if (loading) loading.style.display = 'none';
+  }
+}
+
+function rCustomers() {
+  const listEl = document.getElementById('custList');
+  if (!listEl) return;
+
+  const search = (document.getElementById('custSearchInput')?.value || '').toLowerCase().trim();
+  const bdayFilter = document.getElementById('custBdayFilter')?.value || 'all';
+
+  const now = new Date();
+  const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+
+  // Calculate summary stats
+  const totalMembers = allCustomers.length;
+  const totalPoints = allCustomers.reduce(function(sum, c) { return sum + (c.points || 0); }, 0);
+  const bdayThisMonthCount = allCustomers.filter(function(c) {
+    if (!c.birthday) return false;
+    const parts = c.birthday.split('-');
+    return parts.length >= 2 && parts[1] === currentMonth;
+  }).length;
+
+  const statMembersEl = document.getElementById('statTotalMembers');
+  const statPointsEl = document.getElementById('statTotalPoints');
+  const statBdayEl = document.getElementById('statBdayMonth');
+  if (statMembersEl) statMembersEl.textContent = totalMembers;
+  if (statPointsEl) statPointsEl.textContent = totalPoints;
+  if (statBdayEl) statBdayEl.textContent = bdayThisMonthCount;
+
+  // Filter list
+  const filtered = allCustomers.filter(function(c) {
+    const matchSearch = !search ||
+      (c.phone && c.phone.includes(search)) ||
+      (c.name && c.name.toLowerCase().includes(search));
+
+    let matchBday = true;
+    if (bdayFilter === 'bday_month') {
+      if (!c.birthday) matchBday = false;
+      else {
+        const parts = c.birthday.split('-');
+        matchBday = parts.length >= 2 && parts[1] === currentMonth;
+      }
+    }
+    return matchSearch && matchBday;
+  });
+
+  listEl.innerHTML = '';
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="dr-empty">' + t('noCustomers') + '</div>';
+    return;
+  }
+
+  filtered.forEach(function(c) {
+    const item = document.createElement('div');
+    item.className = 'cust-item';
+
+    let isBdayThisMonth = false;
+    if (c.birthday) {
+      const parts = c.birthday.split('-');
+      if (parts.length >= 2 && parts[1] === currentMonth) {
+        isBdayThisMonth = true;
+      }
+    }
+
+    const bdayBadgeHTML = c.birthday
+      ? '<span class="bday-badge ' + (isBdayThisMonth ? 'bday-this-month' : '') + '">🎂 ' + c.birthday + '</span>'
+      : '';
+
+    const sexText = c.sex === 'female' ? t('female') : (c.sex === 'male' ? t('male') : (c.sex || ''));
+
+    item.innerHTML = '<div class="cust-col-info">'
+      + '<div class="cust-name-row"><span>' + esc(c.name) + '</span><span class="cust-phone-sub">' + esc(c.phone) + '</span></div>'
+      + '<div class="cust-meta-row">' + bdayBadgeHTML + '<span>' + esc(sexText) + '</span><span>• ' + (c.total_orders || 0) + ' ' + t('orders') + ' (฿' + (c.total_spent || 0) + ')</span></div>'
+      + '</div>'
+      + '<div class="cust-col-stats">'
+      + '<div class="cust-points-badge">⭐ ' + (c.points || 0) + ' ' + t('ptsUnit') + '</div>'
+      + '<div class="cust-actions">'
+      + '<button onclick="openLedgerModal(' + c.id + ')" title="' + t('history') + '">📜 ' + t('history') + '</button>'
+      + '<button onclick="openAdjustPointsModal(' + c.id + ')" title="' + t('adjust') + '">⚡ ' + t('adjust') + '</button>'
+      + '<button onclick="openCustomerModal(' + c.id + ')" title="' + t('edit') + '">✏️ ' + t('edit') + '</button>'
+      + '</div>'
+      + '</div>';
+    listEl.appendChild(item);
+  });
+}
+
+function filterCustomers() {
+  rCustomers();
+}
+
+function openCustomerModal(id) {
+  const modal = document.getElementById('custModal');
+  const title = document.getElementById('custModalTitle');
+  const editId = document.getElementById('custEditId');
+  const phone = document.getElementById('custModalPhone');
+  const name = document.getElementById('custModalName');
+  const bday = document.getElementById('custModalBirthday');
+  const sex = document.getElementById('custModalSex');
+
+  if (id) {
+    const cust = allCustomers.find(function(c) { return c.id === id; });
+    if (!cust) return;
+    title.textContent = t('edit') + ' ' + cust.name;
+    editId.value = cust.id;
+    phone.value = cust.phone || '';
+    name.value = cust.name || '';
+    bday.value = cust.birthday || '';
+    sex.value = cust.sex || 'female';
+  } else {
+    title.textContent = t('addCustomer');
+    editId.value = '';
+    phone.value = '';
+    name.value = '';
+    bday.value = '';
+    sex.value = 'female';
+  }
+  modal.style.display = 'flex';
+}
+
+function closeCustomerModal() {
+  document.getElementById('custModal').style.display = 'none';
+}
+
+async function saveCustomerModal() {
+  const id = document.getElementById('custEditId').value;
+  const phone = document.getElementById('custModalPhone').value.trim();
+  const name = document.getElementById('custModalName').value.trim();
+  const birthday = document.getElementById('custModalBirthday').value;
+  const sex = document.getElementById('custModalSex').value;
+
+  if (!phone || !name) {
+    alert(t('phone') + ' & ' + t('fullName') + ' are required');
+    return;
+  }
+
+  try {
+    if (id) {
+      await api('/api/customers/update', { id: Number(id), phone, name, birthday, sex });
+    } else {
+      await api('/api/customers/register', { phone, name, birthday, sex });
+    }
+    closeCustomerModal();
+    await loadCustomers();
+  } catch (e) {
+    alert(e.message || 'Failed to save customer');
+  }
+}
+
+function openAdjustPointsModal(id) {
+  const cust = allCustomers.find(function(c) { return c.id === id; });
+  if (!cust) return;
+  document.getElementById('adjCustId').value = cust.id;
+  document.getElementById('adjCustName').textContent = cust.name;
+  document.getElementById('adjCustPhone').textContent = cust.phone;
+  document.getElementById('adjCurrentPts').textContent = cust.points || 0;
+  document.getElementById('adjDelta').value = '';
+  document.getElementById('adjNote').value = '';
+  document.getElementById('adjustPointsModal').style.display = 'flex';
+}
+
+function closeAdjustPointsModal() {
+  document.getElementById('adjustPointsModal').style.display = 'none';
+}
+
+async function submitAdjustPoints() {
+  const id = Number(document.getElementById('adjCustId').value);
+  const delta = Number(document.getElementById('adjDelta').value);
+  const notes = document.getElementById('adjNote').value.trim();
+
+  if (!id || isNaN(delta) || delta === 0) {
+    alert('Please enter a valid non-zero points number');
+    return;
+  }
+
+  try {
+    await api('/api/customers/adjust-points', { id, delta, notes });
+    closeAdjustPointsModal();
+    await loadCustomers();
+  } catch (e) {
+    alert(e.message || 'Failed to adjust points');
+  }
+}
+
+async function openLedgerModal(id) {
+  const cust = allCustomers.find(function(c) { return c.id === id; });
+  if (!cust) return;
+  document.getElementById('ledgerCustName').textContent = cust.name;
+  document.getElementById('ledgerCustPhone').textContent = cust.phone;
+  document.getElementById('ledgerCustPts').textContent = cust.points || 0;
+
+  const listEl = document.getElementById('ledgerList');
+  listEl.innerHTML = '<div class="loading-spinner">' + t('loading') + '</div>';
+  document.getElementById('ledgerModal').style.display = 'flex';
+
+  try {
+    const entries = await api('/api/customers/ledger', { customerId: id });
+    listEl.innerHTML = '';
+    if (!entries || !entries.length) {
+      listEl.innerHTML = '<div class="dr-empty">No history recorded yet</div>';
+      return;
+    }
+
+    entries.forEach(function(e) {
+      const row = document.createElement('div');
+      row.className = 'ledger-row';
+      const deltaCls = e.points_delta > 0 ? 'ledger-delta-earn' : (e.points_delta < 0 ? 'ledger-delta-redeem' : 'ledger-delta-manual');
+      const sign = e.points_delta > 0 ? '+' : '';
+      const dateStr = (e.created_at || '').replace('T', ' ').slice(0, 16);
+
+      row.innerHTML = '<div>'
+        + '<div style="font-weight:600; color:#2c3e50;">' + esc(e.notes || e.change_type) + '</div>'
+        + '<div style="font-size:.72rem; color:#888;">' + esc(dateStr) + '</div>'
+        + '</div>'
+        + '<div class="' + deltaCls + '" style="font-size:.9rem;">'
+        + sign + e.points_delta + ' ' + t('ptsUnit')
+        + '</div>';
+      listEl.appendChild(row);
+    });
+  } catch (err) {
+    listEl.innerHTML = '<div class="dr-empty">Failed to load history</div>';
+  }
+}
+
+function closeLedgerModal() {
+  document.getElementById('ledgerModal').style.display = 'none';
+}
+
+function showRegisterQrModal() {
+  const modal = document.getElementById('qrModal');
+  const qrDiv = document.getElementById('qrCodeDiv');
+  const linkText = document.getElementById('qrLinkText');
+  const origin = window.location.origin;
+  const regUrl = origin + '/register.html';
+
+  linkText.textContent = regUrl;
+  qrDiv.innerHTML = '';
+
+  if (typeof QRCode !== 'undefined') {
+    new QRCode(qrDiv, {
+      text: regUrl,
+      width: 180,
+      height: 180,
+      colorDark: '#1a1a2e',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } else {
+    qrDiv.innerHTML = '<a href="' + regUrl + '" target="_blank" style="color:#e94560; font-weight:600;">Open Registration Link</a>';
+  }
+
+  modal.style.display = 'flex';
+}
+
+function closeQrModal() {
+  document.getElementById('qrModal').style.display = 'none';
+}
+
+function copyRegLink() {
+  const regUrl = window.location.origin + '/register.html';
+  navigator.clipboard.writeText(regUrl).then(function() {
+    alert('Copied registration link to clipboard!\n' + regUrl);
+  }).catch(function() {
+    prompt('Copy registration link:', regUrl);
+  });
+}
+
+function exportCustomersCSV() {
+  if (!allCustomers.length) {
+    alert('No customer data to export');
+    return;
+  }
+
+  const headers = ['ID', 'Phone', 'Name', 'Birthday', 'Gender', 'Points', 'Total Orders', 'Total Spent (THB)', 'Joined Date'];
+  const rows = allCustomers.map(function(c) {
+    return [
+      c.id,
+      '="' + (c.phone || '') + '"',
+      '"' + (c.name || '').replace(/"/g, '""') + '"',
+      c.birthday || '',
+      c.sex || '',
+      c.points || 0,
+      c.total_orders || 0,
+      c.total_spent || 0,
+      c.created_at || ''
+    ];
+  });
+
+  let csvContent = '\uFEFF' + headers.join(',') + '\n' + rows.map(function(r) { return r.join(','); }).join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'pansod_customers_' + fmtDate(new Date()) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 // ========== TAB SWITCHING ==========
 
@@ -1310,6 +1849,7 @@ document.querySelectorAll('.tab-btn').forEach(function(b) {
     if (b.dataset.tab === 'sales') rSales();
     if (b.dataset.tab === 'dailyreport') loadReport();
     if (b.dataset.tab === 'graborder') rGrabOrder();
+    if (b.dataset.tab === 'customers') loadCustomers();
     if (b.dataset.tab === 'menuedit') { rMeCat(); rMList(); }
   };
 });
@@ -1339,6 +1879,20 @@ async function initApp() {
   document.querySelectorAll('.dr-mode-btn').forEach(function(b) {
     b.dataset.origLabel = b.textContent;
   });
+  
+  const custSearchBtn = document.getElementById('cartCustSearchBtn');
+  if (custSearchBtn) custSearchBtn.onclick = searchCartCustomer;
+  
+  const custPhoneIn = document.getElementById('cartCustPhone');
+  if (custPhoneIn) {
+    custPhoneIn.onkeydown = function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchCartCustomer();
+      }
+    };
+  }
+
   rGrabOrder();
 }
 

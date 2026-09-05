@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PANSOD Store</title>
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=4">
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script>
     (function() {
       var d = new Date();
@@ -36,6 +37,7 @@
         <button class="tab-btn" data-tab="graborder" data-i18n="tabGrabOrder">Grab Orders</button>
         <button class="tab-btn" data-tab="sales" data-i18n="tabSales">Daily Sales</button>
         <button class="tab-btn" data-tab="dailyreport" data-i18n="tabReports">Reports</button>
+        <button class="tab-btn" data-tab="customers" data-i18n="tabCustomers">Customers</button>
         <button class="tab-btn" data-tab="menuedit" data-i18n="tabMenuEdit">Menu Edit</button>
       </div>
       <button class="lang-btn" id="langToggle">TH</button>
@@ -55,6 +57,27 @@
           </div>
           <div class="cart-panel">
             <h2 data-i18n="currentOrder">Current Order</h2>
+            <div class="cart-customer-section">
+              <div class="cart-cust-input-row">
+                <input type="tel" id="cartCustPhone" placeholder="Member Phone (0812345678)" maxlength="10" inputmode="numeric">
+                <button class="btn-small" id="cartCustSearchBtn" type="button" data-i18n="search">Search</button>
+                <button class="btn-small btn-qr" id="cartCustQrBtn" type="button" title="Show Register QR Code" onclick="showRegisterQrModal()">📱 QR</button>
+              </div>
+              <div id="cartCustInfo" class="cart-cust-info" style="display:none">
+                <div class="cust-badge">
+                  <span class="cust-name" id="cartCustName"></span>
+                  <span class="cust-pts" id="cartCustPts">⭐ 0 pts</span>
+                  <button class="cust-clear-btn" onclick="clearCartCustomer()" title="Clear customer">✕</button>
+                </div>
+                <div id="cartRedeemSection" class="cart-redeem-row" style="display:none">
+                  <label class="redeem-toggle">
+                    <input type="checkbox" id="cartRedeemCheck">
+                    <span data-i18n="redeemFreeOnigiri">🎁 Redeem 10 pts (-1 Free Onigiri)</span>
+                  </label>
+                  <span class="redeem-val" id="cartRedeemVal"></span>
+                </div>
+              </div>
+            </div>
             <div class="cart-items" id="cartItems">
               <p class="empty-cart" data-i18n="noItems">No items added</p>
             </div>
@@ -72,6 +95,10 @@
             </div>
             <button class="btn btn-primary" id="checkoutBtn" disabled data-i18n="checkout">Checkout (0)</button>
           </div>
+        </div>
+        <div id="mobileCartBar" class="mobile-cart-bar" style="display:none" onclick="scrollToCart()">
+          <span id="mobileCartSummaryText">0 items • ฿0</span>
+          <span class="mobile-cart-action" data-i18n="viewCart">View Cart ➔</span>
         </div>
       </section>
 
@@ -99,6 +126,10 @@
               <label data-i18n="grabOrderNr">No.</label>
               <input type="text" id="grabOrderNr" maxlength="3" inputmode="numeric" pattern="[0-9]*" placeholder="001">
             </div>
+            <div class="go-order-nr" style="margin-top:-.15rem">
+              <label data-i18n="memberPhone">Phone:</label>
+              <input type="tel" id="grabCustPhone" maxlength="10" inputmode="numeric" style="width:140px; text-align:left; font-size:.8rem;" placeholder="Optional (Points)">
+            </div>
             <div class="grab-customer-type">
               <label data-i18n="customerType">Customer:</label>
               <label class="ct-radio"><input type="checkbox" name="custType" value="old"> <span data-i18n="custOld">Old</span></label>
@@ -110,15 +141,19 @@
         </div>
         <h3 data-i18n="grabHistory">Today's Grab Orders</h3>
         <div class="go-history" id="grabHistory"></div>
+        <div id="mobileGrabBar" class="mobile-cart-bar" style="display:none" onclick="scrollToGrabCart()">
+          <span id="mobileGrabSummaryText">0 items selected</span>
+          <span class="mobile-cart-action" data-i18n="viewCart">View Selected ➔</span>
+        </div>
       </section>
 
       <section id="tab-sales" class="tab-content">
         <div class="dr-mode-bar" id="salesQuickBar">
-          <button class="dr-mode-btn active" data-range="today" onclick="setSalesRange(this)" data-i18n="salesToday">Today</button>
-          <button class="dr-mode-btn" data-range="yesterday" onclick="setSalesRange(this)" data-i18n="salesYesterday">Yesterday</button>
-          <button class="dr-mode-btn" data-range="last7" onclick="setSalesRange(this)" data-i18n="salesLast7">Last 7 Days</button>
-          <button class="dr-mode-btn" data-range="month" onclick="setSalesRange(this)" data-i18n="salesMonth">This Month</button>
-          <button class="dr-mode-btn" data-range="lastmonth" onclick="setSalesRange(this)" data-i18n="salesLastMonth">Last Month</button>
+          <button class="quick-btn active" data-range="today" onclick="setSalesRange(this)" data-i18n="salesToday">Today</button>
+          <button class="quick-btn" data-range="yesterday" onclick="setSalesRange(this)" data-i18n="salesYesterday">Yesterday</button>
+          <button class="quick-btn" data-range="last7" onclick="setSalesRange(this)" data-i18n="salesLast7">Last 7 Days</button>
+          <button class="quick-btn" data-range="month" onclick="setSalesRange(this)" data-i18n="salesMonth">This Month</button>
+          <button class="quick-btn" data-range="lastmonth" onclick="setSalesRange(this)" data-i18n="salesLastMonth">Last Month</button>
         </div>
         <div class="dr-header">
           <h2 data-i18n="todaySales">Sales</h2>
@@ -145,17 +180,20 @@
         </div>
         <div class="dr-header">
           <h2 data-i18n="tabReports">Reports</h2>
-          <div class="dr-range-picker" id="drRangePicker">
-            <div class="dr-datepicker" id="drDailyPicker">
-              <input type="date" id="drDate">
-              <button class="btn-small" id="drLoad" data-i18n="drLoad">Load</button>
+          <div class="dr-datepicker">
+            <div class="dr-range-picker" id="drRangePicker">
+              <div class="dr-datepicker" id="drDailyPicker">
+                <input type="date" id="drDate">
+                <button class="btn-small" id="drLoad" data-i18n="drLoad">Load</button>
+              </div>
+              <div class="dr-datepicker" id="drCustomPicker" style="display:none">
+                <input type="date" id="drStartDate">
+                <span>—</span>
+                <input type="date" id="drEndDate">
+                <button class="btn-small" id="drRangeLoad" data-i18n="drLoad">Load</button>
+              </div>
             </div>
-            <div class="dr-datepicker" id="drCustomPicker" style="display:none">
-              <input type="date" id="drStartDate">
-              <span>—</span>
-              <input type="date" id="drEndDate">
-              <button class="btn-small" id="drRangeLoad" data-i18n="drLoad">Load</button>
-            </div>
+            <button class="btn-small" id="csvDownload" data-i18n="csvDownload">Download CSV</button>
           </div>
         </div>
         <div id="drLoading" class="loading-spinner" style="display:none">Loading...</div>
@@ -176,6 +214,43 @@
         <div class="dr-insights" id="drInsights"></div>
         <h3 data-i18n="grabInsights">Grab Insights</h3>
         <div class="dr-grab-insights" id="drGrabInsights"></div>
+      </section>
+
+      <section id="tab-customers" class="tab-content">
+        <div class="cust-header">
+          <h2 data-i18n="tabCustomers">Customers & Loyalty</h2>
+          <div class="cust-header-actions">
+            <button class="btn-small btn-qr" onclick="showRegisterQrModal()">📱 Show QR</button>
+            <button class="btn-small" onclick="openCustomerModal()" data-i18n="addCustomer">➕ Add Member</button>
+            <button class="btn-small" id="custCsvBtn" onclick="exportCustomersCSV()" data-i18n="exportCsv">📥 Export CSV</button>
+          </div>
+        </div>
+
+        <div class="cust-summary" id="custSummary">
+          <div class="cust-card">
+            <div class="cust-card-label" data-i18n="totalMembers">Total Members</div>
+            <div class="cust-card-val" id="statTotalMembers">0</div>
+          </div>
+          <div class="cust-card">
+            <div class="cust-card-label" data-i18n="totalPoints">Points in Circulation</div>
+            <div class="cust-card-val" id="statTotalPoints">0</div>
+          </div>
+          <div class="cust-card">
+            <div class="cust-card-label" data-i18n="bdayThisMonth">Birthdays This Month</div>
+            <div class="cust-card-val" id="statBdayMonth">0</div>
+          </div>
+        </div>
+
+        <div class="cust-filter-bar">
+          <input type="text" id="custSearchInput" placeholder="Search by name or phone..." oninput="filterCustomers()">
+          <select id="custBdayFilter" onchange="filterCustomers()">
+            <option value="all" data-i18n="filterAll">All Members</option>
+            <option value="bday_month" data-i18n="filterBdayMonth">🎂 Birthday This Month</option>
+          </select>
+        </div>
+
+        <div id="custLoading" class="loading-spinner" style="display:none">Loading...</div>
+        <div class="cust-list" id="custList"></div>
       </section>
 
       <section id="tab-menuedit" class="tab-content">
@@ -224,10 +299,92 @@
         <button class="modal-cancel" onclick="closePaymentModal()" data-i18n="cancel">Cancel</button>
       </div>
     </div>
+    <!-- QR Code Modal -->
+    <div id="qrModal" class="modal-overlay" style="display:none">
+      <div class="modal" style="max-width:380px">
+        <h2 data-i18n="qrModalTitle">Customer Registration QR</h2>
+        <div class="qr-container">
+          <div id="qrCodeDiv" class="qr-box"></div>
+          <p class="qr-link-text" id="qrLinkText"></p>
+        </div>
+        <div class="modal-btn-row">
+          <button class="btn btn-primary" onclick="copyRegLink()" data-i18n="copyLink">Copy Link</button>
+          <button class="modal-cancel" onclick="closeQrModal()" data-i18n="close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Edit / Add Modal -->
+    <div id="custModal" class="modal-overlay" style="display:none">
+      <div class="modal" style="max-width:400px; text-align:left;">
+        <h2 id="custModalTitle" data-i18n="addCustomer">Add Customer</h2>
+        <input type="hidden" id="custEditId">
+        <div class="modal-form-group">
+          <label><span data-i18n="phone">Phone Number</span> *</label>
+          <input type="tel" id="custModalPhone" placeholder="0812345678" maxlength="10">
+        </div>
+        <div class="modal-form-group">
+          <label><span data-i18n="fullName">Full Name / Nickname</span> *</label>
+          <input type="text" id="custModalName" placeholder="Name">
+        </div>
+        <div class="modal-form-group">
+          <label><span data-i18n="birthday">Birthday</span></label>
+          <input type="date" id="custModalBirthday">
+        </div>
+        <div class="modal-form-group">
+          <label><span data-i18n="sex">Sex / Gender</span></label>
+          <select id="custModalSex">
+            <option value="female" data-i18n="female">Female</option>
+            <option value="male" data-i18n="male">Male</option>
+            <option value="unspecified" data-i18n="unspecified">Unspecified / Other</option>
+          </select>
+        </div>
+        <div class="modal-btn-row">
+          <button class="btn btn-primary" onclick="saveCustomerModal()" data-i18n="save">Save</button>
+          <button class="modal-cancel" onclick="closeCustomerModal()" data-i18n="cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adjust Points Modal -->
+    <div id="adjustPointsModal" class="modal-overlay" style="display:none">
+      <div class="modal" style="max-width:380px; text-align:left;">
+        <h2 data-i18n="adjustPoints">Adjust Points</h2>
+        <input type="hidden" id="adjCustId">
+        <p style="font-size:.85rem; color:#666; margin-bottom:.75rem;">
+          <strong id="adjCustName">-</strong> (<span id="adjCustPhone">-</span>)<br>
+          <span data-i18n="currentBalance">Current Balance:</span> <strong id="adjCurrentPts">0</strong> <span data-i18n="ptsUnit">pts</span>
+        </p>
+        <div class="modal-form-group">
+          <label data-i18n="pointDelta">Points to Add (+) or Deduct (-)</label>
+          <input type="number" id="adjDelta" placeholder="e.g. 5 or -10" step="1">
+        </div>
+        <div class="modal-form-group">
+          <label data-i18n="reasonNote">Reason / Note</label>
+          <input type="text" id="adjNote" placeholder="e.g. Special promotion / Correction">
+        </div>
+        <div class="modal-btn-row">
+          <button class="btn btn-primary" onclick="submitAdjustPoints()" data-i18n="save">Update Points</button>
+          <button class="modal-cancel" onclick="closeAdjustPointsModal()" data-i18n="cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Points Ledger Modal -->
+    <div id="ledgerModal" class="modal-overlay" style="display:none">
+      <div class="modal" style="max-width:500px">
+        <h2 data-i18n="pointsLedgerTitle">Points History</h2>
+        <p style="font-size:.85rem; color:#666; margin-bottom:.5rem;">
+          <strong id="ledgerCustName">-</strong> • <span id="ledgerCustPhone">-</span> • <strong id="ledgerCustPts">0</strong> pts
+        </p>
+        <div id="ledgerList" class="ledger-list"></div>
+        <button class="modal-cancel" onclick="closeLedgerModal()" data-i18n="close">Close</button>
+      </div>
+    </div>
   </div>
 
   <div id="printArea" class="print-area"></div>
 
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>

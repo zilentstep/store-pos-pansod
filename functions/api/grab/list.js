@@ -11,8 +11,26 @@ export async function onRequest(context) {
     const body = await request.json();
     const date = body?.date || new Date().toISOString().split('T')[0];
 
+    try { await env.DB.prepare("ALTER TABLE grab_orders ADD COLUMN customer_id INTEGER").run(); } catch(e) {}
+    try { await env.DB.prepare("ALTER TABLE grab_orders ADD COLUMN points_earned INTEGER NOT NULL DEFAULT 0").run(); } catch(e) {}
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS customers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        phone TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        birthday TEXT,
+        sex TEXT,
+        points INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `).run();
+
     const orders = await env.DB.prepare(
-      `SELECT * FROM grab_orders WHERE date(created_at) = ? ORDER BY id DESC`
+      `SELECT g.*, c.name as customer_name, c.phone as customer_phone
+       FROM grab_orders g
+       LEFT JOIN customers c ON g.customer_id = c.id
+       WHERE date(g.created_at) = ?
+       ORDER BY g.id DESC`
     ).bind(date).all();
 
     const ordersWithItems = [];
@@ -30,6 +48,10 @@ export async function onRequest(context) {
         time: h + ':' + m,
         orderNr: order.order_nr || '',
         customerType: order.customer_type || '',
+        customerId: order.customer_id,
+        customerName: order.customer_name,
+        customerPhone: order.customer_phone,
+        pointsEarned: order.points_earned || 0,
         items: items.results.map(i => ({
           name: i.item_name,
           qty: i.qty

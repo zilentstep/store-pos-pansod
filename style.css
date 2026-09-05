@@ -153,6 +153,7 @@ h3{font-size:.95rem;margin-bottom:.5rem}
 .dr-cat-bar-fill{height:100%;border-radius:4px;transition:width .3s}
 .dr-cat-bar-fill.onigiri{background:#e94560}
 .dr-cat-bar-fill.drinks{background:#2196f3}
+.dr-cat-bar-fill.salad{background:#4caf50}
 .dr-cat-bar-fill.other{background:#ff9800}
 .dr-cat-value{font-weight:700;font-size:.8rem;width:72px;text-align:right;flex-shrink:0;color:#1a1a2e}
 .dr-cat-pct{font-size:.7rem;color:#999;width:35px;text-align:right;flex-shrink:0}
@@ -232,6 +233,12 @@ h3{font-size:.95rem;margin-bottom:.5rem}
 .dr-mode-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e;font-weight:600}
 .dr-mode-btn:active{transform:scale(.96)}
 .dr-range-picker .dr-datepicker{display:flex;gap:.35rem;align-items:center}
+
+/* Sales quick range buttons */
+.quick-btn{padding:.35rem .65rem;border:1px solid #ddd;border-radius:6px;background:#f8f9fa;cursor:pointer;font-size:.75rem;font-weight:500;color:#666;transition:all .12s;-webkit-tap-highlight-color:transparent;min-height:32px}
+.quick-btn:hover{background:#fff;border-color:#ccc;color:#333}
+.quick-btn.active{background:#e94560;color:#fff;border-color:#e94560;font-weight:600}
+.quick-btn:active{transform:scale(.96)}
 
 /* ===== RESPONSIVE ===== */
 
@@ -340,6 +347,74 @@ h3{font-size:.95rem;margin-bottom:.5rem}
   .dr-card .dr-card-value{font-size:1rem}
 }
 
+/* Mobile floating cart bar */
+.mobile-cart-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1a2e;color:#fff;padding:.75rem 1rem;justify-content:space-between;align-items:center;z-index:90;box-shadow:0 -4px 16px rgba(0,0,0,.2);font-weight:600;font-size:.9rem;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mobile-cart-action{color:#e94560;font-weight:700}
+
+/* ===== CUSTOMER & LOYALTY STYLES ===== */
+.cart-customer-section{margin-bottom:.55rem;padding:.55rem;background:#fdf6f0;border:1px solid #f8d7c2;border-radius:8px}
+.cart-cust-input-row{display:flex;gap:.35rem;align-items:center}
+.cart-cust-input-row input{flex:1;min-width:0;padding:.38rem .5rem;border:1px solid #ddd;border-radius:6px;font-size:.8rem;font-family:inherit}
+.btn-qr{background:#6c5ce7!important}
+.cart-cust-info{margin-top:.45rem;padding-top:.45rem;border-top:1px dashed #f0c3a5}
+.cust-badge{display:flex;align-items:center;justify-content:space-between;font-size:.82rem;font-weight:600;gap:.4rem}
+.cust-name{color:#2d3436;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.cust-pts{color:#d35400;background:#ffeaa7;padding:.15rem .45rem;border-radius:12px;font-size:.78rem;font-weight:700;white-space:nowrap}
+.cust-clear-btn{background:none;border:none;color:#888;cursor:pointer;font-size:.9rem;padding:0 .2rem}
+.cust-clear-btn:hover{color:#e94560}
+.cart-redeem-row{margin-top:.45rem;display:flex;align-items:center;justify-content:space-between;background:#e8f8f5;padding:.35rem .45rem;border-radius:6px;border:1px solid #a3e4d7}
+.redeem-toggle{display:flex;align-items:center;gap:.35rem;cursor:pointer;font-size:.78rem;font-weight:600;color:#0e6655}
+.redeem-toggle input{width:16px;height:16px;accent-color:#00b894;cursor:pointer}
+.redeem-val{font-size:.78rem;font-weight:700;color:#00b894}
+
+.cust-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;flex-wrap:wrap;gap:.5rem}
+.cust-header-actions{display:flex;gap:.35rem;flex-wrap:wrap}
+.cust-filter-bar{display:flex;gap:.45rem;margin-bottom:.85rem;flex-wrap:wrap;align-items:center}
+.cust-filter-bar input{flex:1;min-width:180px;padding:.4rem .6rem;border:1px solid #ddd;border-radius:6px;font-size:.82rem;font-family:inherit}
+.cust-filter-bar select{padding:.4rem .6rem;border:1px solid #ddd;border-radius:6px;font-size:.82rem;font-family:inherit}
+
+.cust-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;margin-bottom:1rem}
+.cust-card{background:#fff;border-radius:10px;padding:.75rem;box-shadow:0 1px 3px rgba(0,0,0,.07);text-align:center}
+.cust-card-label{font-size:.68rem;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.15rem}
+.cust-card-val{font-size:1.25rem;font-weight:700;color:#1a1a2e}
+
+.cust-list{display:flex;flex-direction:column;gap:.4rem}
+.cust-item{background:#fff;border-radius:8px;padding:.6rem .8rem;box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;font-size:.82rem}
+.cust-col-info{display:flex;flex-direction:column;gap:.15rem;flex:1;min-width:180px}
+.cust-name-row{display:flex;align-items:center;gap:.4rem;font-weight:600;color:#1a1a2e}
+.cust-phone-sub{color:#666;font-size:.76rem;font-family:monospace}
+.cust-meta-row{display:flex;align-items:center;gap:.5rem;color:#888;font-size:.74rem;flex-wrap:wrap}
+.bday-badge{background:#ffeaa7;color:#d35400;padding:.1rem .35rem;border-radius:4px;font-weight:600;font-size:.7rem}
+.bday-this-month{background:#ff7675;color:#fff}
+.cust-col-stats{display:flex;align-items:center;gap:.6rem}
+.cust-points-badge{background:#fff0f3;border:1.5px solid #e94560;color:#e94560;font-weight:700;padding:.25rem .6rem;border-radius:20px;font-size:.85rem;white-space:nowrap}
+.cust-actions{display:flex;gap:.25rem}
+.cust-actions button{padding:.3rem .55rem;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:.74rem;transition:all .12s;-webkit-tap-highlight-color:transparent;min-height:32px}
+.cust-actions button:hover{background:#f8f9fa}
+
+/* QR Code Display Modal */
+.qr-container{display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1rem 0}
+.qr-box{padding:12px;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.08);display:inline-block}
+.qr-link-text{font-size:.78rem;color:#666;word-break:break-all;max-width:280px;text-align:center}
+
+/* Form Styles for Customer modals */
+.modal-form-group{margin-bottom:.85rem;text-align:left}
+.modal-form-group label{display:block;font-size:.8rem;font-weight:600;color:#444;margin-bottom:.3rem}
+.modal-form-group input, .modal-form-group select, .modal-form-group textarea{width:100%;padding:.5rem .65rem;border:1px solid #ddd;border-radius:8px;font-size:.85rem;font-family:inherit}
+.modal-btn-row{display:flex;gap:.5rem;margin-top:1.25rem}
+.modal-btn-row .btn{flex:1}
+
+/* Ledger table */
+.ledger-list{max-height:320px;overflow-y:auto;margin:1rem 0;text-align:left}
+.ledger-row{display:flex;justify-content:space-between;align-items:center;padding:.45rem .6rem;border-bottom:1px solid #eee;font-size:.78rem}
+.ledger-delta-earn{color:#27ae60;font-weight:700}
+.ledger-delta-redeem{color:#c0392b;font-weight:700}
+.ledger-delta-manual{color:#2980b9;font-weight:700}
+
+@media(max-width:600px){
+  input[type="text"],input[type="password"],input[type="date"],select,textarea{font-size:16px!important}
+}
+
 /* ===== PRINT ===== */
 .print-area{display:none}
 @media print{
@@ -361,4 +436,5 @@ h3{font-size:.95rem;margin-bottom:.5rem}
   .pr-kitchen .pr-item-name{font-size:4mm}
   .pr-kitchen .pr-qty{font-size:4mm;font-weight:700}
   .pr-kitchen .pr-row{font-size:4mm;font-weight:700;margin-bottom:1mm}
+  .pr-page-break{page-break-after:always;break-after:page}
 }

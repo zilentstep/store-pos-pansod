@@ -12,9 +12,28 @@ export async function onRequest(context) {
     const startDate = body?.startDate || body?.date || new Date().toISOString().split('T')[0];
     const endDate = body?.endDate || startDate;
 
-    // Fetch orders for the date range
+    try { await env.DB.prepare("ALTER TABLE orders ADD COLUMN customer_id INTEGER").run(); } catch(e) {}
+    try { await env.DB.prepare("ALTER TABLE orders ADD COLUMN points_earned INTEGER NOT NULL DEFAULT 0").run(); } catch(e) {}
+    try { await env.DB.prepare("ALTER TABLE orders ADD COLUMN points_redeemed INTEGER NOT NULL DEFAULT 0").run(); } catch(e) {}
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS customers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        phone TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        birthday TEXT,
+        sex TEXT,
+        points INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `).run();
+
+    // Fetch orders with customer info for the date range
     const orders = await env.DB.prepare(
-      `SELECT * FROM orders WHERE date(created_at) >= ? AND date(created_at) <= ? ORDER BY id DESC`
+      `SELECT o.*, c.name as customer_name, c.phone as customer_phone
+       FROM orders o
+       LEFT JOIN customers c ON o.customer_id = c.id
+       WHERE date(o.created_at) >= ? AND date(o.created_at) <= ?
+       ORDER BY o.id DESC`
     ).bind(startDate, endDate).all();
 
     const ordersWithItems = [];
@@ -29,6 +48,7 @@ export async function onRequest(context) {
       const m = dt.getMinutes().toString().padStart(2, '0');
       ordersWithItems.push({
         id: order.id,
+        date: order.created_at.split('T')[0],
         time: h + ':' + m,
         items: items.results.map(i => ({
           name: i.item_name,
@@ -41,7 +61,12 @@ export async function onRequest(context) {
         finalTotal: order.final_total,
         paymentMethod: order.payment_method,
         orderType: order.order_type,
-        status: order.status
+        status: order.status,
+        customerId: order.customer_id,
+        customerName: order.customer_name,
+        customerPhone: order.customer_phone,
+        pointsEarned: order.points_earned || 0,
+        pointsRedeemed: order.points_redeemed || 0
       });
     }
 

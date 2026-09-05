@@ -1,9 +1,9 @@
-function toISO(d) {
-  const y = d.getFullYear();
-  const m = (d.getMonth() + 1).toString().padStart(2, '0');
-  const day = d.getDate().toString().padStart(2, '0');
-  return y + '-' + m + '-' + day;
-}
+/**
+ * POST /api/report/range
+ * Returns aggregated report data for a date range
+ * Body: { startDate: "YYYY-MM-DD", endDate: "YYYY-MM-DD" }
+ * Response: { success: true, data: { ... } }
+ */
 
 export async function onRequest(context) {
   try {
@@ -27,31 +27,23 @@ export async function onRequest(context) {
       `SELECT * FROM orders WHERE date(created_at) >= ? AND date(created_at) <= ?`
     ).bind(startDate, endDate).all();
 
-    const allOrderItems = [];
-    for (const order of orders.results) {
-      const items = await env.DB.prepare(
-        "SELECT * FROM order_items WHERE order_id = ?"
-      ).bind(order.id).all();
-      allOrderItems.push({ order, items: items.results });
-    }
+    const orderItemsRes = await env.DB.prepare(
+      `SELECT oi.* FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE date(o.created_at) >= ? AND date(o.created_at) <= ?`
+    ).bind(startDate, endDate).all();
+    const orderItems = orderItemsRes.results;
 
     const grabOrders = await env.DB.prepare(
       `SELECT * FROM grab_orders WHERE date(created_at) >= ? AND date(created_at) <= ?`
     ).bind(startDate, endDate).all();
 
-    const allGrabItems = [];
-    for (const go of grabOrders.results) {
-      const items = await env.DB.prepare(
-        "SELECT * FROM grab_order_items WHERE grab_order_id = ?"
-      ).bind(go.id).all();
-      allGrabItems.push({ order: go, items: items.results });
-    }
+    const grabItemsRes = await env.DB.prepare(
+      `SELECT goi.* FROM grab_order_items goi JOIN grab_orders go ON go.id = goi.grab_order_id WHERE date(go.created_at) >= ? AND date(go.created_at) <= ?`
+    ).bind(startDate, endDate).all();
+    const grabItems = grabItemsRes.results;
 
     const totalOrders = orders.results.length;
     const totalRevenue = orders.results.reduce((s, o) => s + o.final_total, 0);
-    const totalItems = allOrderItems.reduce((s, oi) =>
-      s + oi.items.reduce((a, i) => a + i.qty, 0), 0
-    );
+    const totalItems = orderItems.reduce((s, i) => s + i.qty, 0);
     const aov = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
     const totalDiscount = orders.results.reduce((s, o) => s + o.discount, 0);
 
@@ -63,51 +55,38 @@ export async function onRequest(context) {
       .reduce((s, o) => s + o.final_total, 0);
 
     const grabTotalOrders = grabOrders.results.length;
-    const grabTotalItems = allGrabItems.reduce((s, gi) =>
-      s + gi.items.reduce((a, i) => a + i.qty, 0), 0
-    );
+    const grabTotalItems = grabItems.reduce((s, i) => s + i.qty, 0);
 
     let grabTotalRevenue = 0;
-    for (const gi of allGrabItems) {
-      for (const item of gi.items) {
-        const menuItem = getMenu(item.item_name);
-        grabTotalRevenue += (menuItem?.price || 0) * item.qty;
-      }
+    for (const item of grabItems) {
+      grabTotalRevenue += (getMenu(item.item_name)?.price || 0) * item.qty;
     }
 
+    // --- Top selling products (in-store only) ---
     const productMap = {};
-    for (const oi of allOrderItems) {
-      for (const item of oi.items) {
-        if (!productMap[item.item_name]) productMap[item.item_name] = { qty: 0, rev: 0 };
-        productMap[item.item_name].qty += item.qty;
-        productMap[item.item_name].rev += item.price * item.qty;
-      }
-    }
-    for (const gi of allGrabItems) {
-      for (const item of gi.items) {
-        if (!productMap[item.item_name]) productMap[item.item_name] = { qty: 0, rev: 0 };
-        productMap[item.item_name].qty += item.qty;
-        const menuItem = getMenu(item.item_name);
-        productMap[item.item_name].rev += (menuItem?.price || 0) * item.qty;
-      }
+    for (const item of orderItems) {
+      if (!productMap[item.item_name]) productMap[item.item_name] = { qty: 0, rev: 0 };
+      productMap[item.item_name].qty += item.qty;
+      productMap[item.item_name].rev += item.price * item.qty;
     }
 
     const topProducts = Object.entries(productMap)
       .map(([name, data]) => ({ name, qty: data.qty, rev: Math.round(data.rev) }))
       .sort((a, b) => b.qty - a.qty);
 
-    const catBreakdown = { Onigiri: 0, Drinks: 0, Other: 0 };
-    for (const oi of allOrderItems) {
-      for (const item of oi.items) {
-        const menuItem = getMenu(item.item_name);
-        const rev = item.price * item.qty;
-        if (menuItem?.cat === 'Onigiri') catBreakdown.Onigiri += rev;
-        else if (menuItem?.cat === 'Drinks') catBreakdown.Drinks += rev;
-        else catBreakdown.Other += rev;
-      }
+    // --- Category breakdown (revenue only from in-store) ---
+    const catBreakdown = { Onigiri: 0, Drinks: 0, Salad: 0, Other: 0 };
+    for (const item of orderItems) {
+      const menuItem = getMenu(item.item_name);
+      const rev = item.price * item.qty;
+      if (menuItem?.cat === 'Onigiri') catBreakdown.Onigiri += rev;
+      else if (menuItem?.cat === 'Drinks') catBreakdown.Drinks += rev;
+      else if (menuItem?.cat === 'Salad') catBreakdown.Salad += rev;
+      else catBreakdown.Other += rev;
     }
     const catTotal = catBreakdown.Onigiri + catBreakdown.Drinks + catBreakdown.Other;
 
+    // --- Hourly sales ---
     const hourly = {};
     for (let h = 0; h < 24; h++) hourly[h] = { orders: 0, rev: 0 };
     for (const order of orders.results) {
@@ -117,15 +96,13 @@ export async function onRequest(context) {
       hourly[hr].rev += order.final_total;
     }
 
+    // --- Grab insights ---
     let oniQtyInGrab = 0;
     const grabProductMap = {};
-    for (const gi of allGrabItems) {
-      for (const item of gi.items) {
-        const cat = item.cat || '';
-        if (cat === 'Onigiri') oniQtyInGrab += item.qty;
-        if (!grabProductMap[item.item_name]) grabProductMap[item.item_name] = { qty: 0 };
-        grabProductMap[item.item_name].qty += item.qty;
-      }
+    for (const item of grabItems) {
+      if (item.cat === 'Onigiri') oniQtyInGrab += item.qty;
+      if (!grabProductMap[item.item_name]) grabProductMap[item.item_name] = { qty: 0 };
+      grabProductMap[item.item_name].qty += item.qty;
     }
     const avgOniPerGrab = grabTotalOrders > 0 ? Math.round(oniQtyInGrab / grabTotalOrders) : 0;
 
@@ -147,7 +124,7 @@ export async function onRequest(context) {
 
     const report = {
       summary: { totalRevenue, totalOrders, totalItems, aov, totalDiscount, cashTotal, qrTotal },
-      grab: { totalOrders: grabTotalOrders, totalItems: grabTotalItems, oldOrders: oldCount, newOrders: newCount, adsOrders: adsCount, avgPcsPerBill: avgPcsPerBill, totalOnigiri: oniQtyInGrab, grabTopProducts, grabLowProducts },
+      grab: { totalOrders: grabTotalOrders, totalItems: grabTotalItems, oldOrders: oldCount, newOrders: newCount, adsOrders: adsCount, avgPcsPerBill: avgPcsPerBill, totalOnigiri: oniQtyInGrab, grabTopProducts, grabLowProducts, grabProducts },
       topProducts,
       categoryBreakdown: { ...catBreakdown, total: catTotal },
       hourly: Object.entries(hourly)

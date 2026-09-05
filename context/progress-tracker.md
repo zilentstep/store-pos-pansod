@@ -59,8 +59,16 @@ https://pansod-store.pages.dev
 - **2026-06-23**: Decided on Cloudflare Pages + Functions + D1 stack. Vanilla JS frontend (no framework) to match existing demo. Simple PIN auth stored in D1 settings table. Multi-device shared data via Cloudflare cloud infrastructure.
 - **2026-06-23**: API routes use POST with JSON body for consistency (Pages Functions expect POST for form-like simplicity). PIN is passed as `x-pin` header on every request.
 - **2026-06-27**: Added `customer_type` column to `grab_orders` table for tracking Old/New/Ads customers. Created `/api/report/range` for date range reports. All timestamps now use GMT+7 timezone. Added order date backdating for Take Order. Reports tab redesigned with Daily/Custom/Weekly/This Month/Last Month/Past 7 Days modes.
+- **2026-09-05**: Built Customer Loyalty Program & Self-Registration system:
+  - Database schema: `customers` and `customer_points_ledger` tables with customer linkage on `orders` and `grab_orders`.
+  - Loyalty Rules: 1 Onigiri item = 1 point earned. 10 points = 1 free onigiri redeemed at storefront.
+  - Self-Registration Page (`register.html` / `/register`): Mobile-friendly public landing page capturing Phone, Name, Birthday, Sex with bilingual TH/EN support and points tracker card.
+  - POS Integration: Member search on Take Order cart with automatic points balance display and 1-click 10-points Free Onigiri redemption. Optional member phone on Grab Order recording for awarding points.
+  - Customer Management Tab: Search members, view stats (total members, points in circulation, birthdays this month), edit member details, manual points adjustments, points audit ledger history, and CSV export for marketing campaigns.
+  - QR Code Generation modal in POS to let customers scan and register on their phones.
 
 ## Session Notes
 
 - Context files created from demo analysis and user requirements.
 - 2026-06-27: Major feature additions — grab order edit button, customer type tracking, order date backdating, date range reports with multiple presets, grab revenue in reports, GMT+7 timezone fix.
+- 2026-09-05: Implemented Loyalty & Customer Marketing system with customer registration page, QR code modal, POS cart redemption, and customer management dashboard.

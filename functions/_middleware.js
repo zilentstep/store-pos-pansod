@@ -14,8 +14,12 @@ async function onRequest(context) {
     return next();
   }
 
-  // Allow /api/auth without PIN
-  if (path === '/api/auth' || path === '/api/auth/') {
+  // Allow public endpoints without PIN
+  if (
+    path === '/api/auth' || path === '/api/auth/' ||
+    path === '/api/customers/register' || path === '/api/customers/register/' ||
+    path === '/api/customers/lookup' || path === '/api/customers/lookup/'
+  ) {
     return next();
   }
 

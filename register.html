@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PANSOD Loyalty Program | สมัครสมาชิกสะสมแต้ม</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #c0392b;
+      --primary-hover: #a93226;
+      --primary-light: #fbeee6;
+      --bg: #f9f8f6;
+      --card-bg: #ffffff;
+      --text: #2c3e50;
+      --text-muted: #7f8c8d;
+      --border: #e0deda;
+      --accent: #e67e22;
+      --gold: #f39c12;
+      --success: #27ae60;
+      --radius: 14px;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 40px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+      padding-top: 10px;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      padding: 6px 16px;
+      border-radius: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      margin-bottom: 12px;
+    }
+
+    .brand-icon {
+      font-size: 24px;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 0.5px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 6px;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .perk-card {
+      background: linear-gradient(135deg, #fff5eb 0%, #fff 100%);
+      border: 1.5px dashed var(--accent);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .perk-icon {
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .perk-text h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #d35400;
+      margin-bottom: 2px;
+    }
+
+    .perk-text p {
+      font-size: 13px;
+      color: #7f8c8d;
+      line-height: 1.3;
+    }
+
+    .tab-switch {
+      display: flex;
+      background: #eae8e3;
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .tab-switch button {
+      flex: 1;
+      padding: 10px 0;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-switch button.active {
+      background: #fff;
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #34495e;
+      margin-bottom: 6px;
+    }
+
+    .form-label span.req {
+      color: var(--primary);
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
+
+    .sex-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .sex-btn {
+      padding: 10px 6px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .sex-btn.active {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(192, 57, 43, 0.25);
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .msg-box {
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .msg-box.error {
+      display: block;
+      background: #fde8e8;
+      color: #c81e1e;
+      border: 1px solid #f8b4b4;
+    }
+
+    .msg-box.success {
+      display: block;
+      background: #def7ec;
+      color: #03543f;
+      border: 1px solid #bcf0da;
+    }
+
+    /* Member Card View */
+    .member-card {
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      color: #fff;
+      border-radius: 16px;
+      padding: 22px;
+      margin-top: 10px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+
+    .member-card::before {
+      content: '🍙';
+      position: absolute;
+      right: -10px;
+      bottom: -20px;
+      font-size: 110px;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    .mc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .mc-brand {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fca5a5;
+      letter-spacing: 0.5px;
+    }
+
+    .mc-badge {
+      font-size: 11px;
+      background: rgba(255,255,255,0.15);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+      color: #f3f4f6;
+    }
+
+    .mc-name {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .mc-phone {
+      font-size: 14px;
+      color: #9ca3af;
+      margin-bottom: 18px;
+      font-family: monospace;
+      letter-spacing: 1px;
+    }
+
+    .mc-points-box {
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+
+    .mc-points-label {
+      font-size: 12px;
+      color: #d1d5db;
+      margin-bottom: 2px;
+    }
+
+    .mc-points-val {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fbbf24;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .mc-points-val span {
+      font-size: 14px;
+      color: #d1d5db;
+      font-weight: 400;
+    }
+
+    .progress-bar-container {
+      background: rgba(255,255,255,0.15);
+      height: 8px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px 0 6px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f59e0b, #10b981);
+      border-radius: 10px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      color: #e5e7eb;
+      text-align: right;
+    }
+
+    .mc-footer-tip {
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+      margin-top: 14px;
+      line-height: 1.4;
+    }
+
+    .btn-action-alt {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 14px;
+    }
+
+    .lang-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="lang-btn" id="regLangBtn" onclick="toggleRegLang()">TH / EN</button>
+
+  <div class="container">
+    <div class="header">
+      <div class="brand-badge">
+        <span class="brand-icon">🍙</span>
+        <span class="brand-title">PANSOD</span>
+      </div>
+      <h1 id="txtTitle">สมาชิกสะสมแต้ม</h1>
+      <p id="txtSub">กินข้าวปั้นครบ 10 ชิ้น รับฟรี 1 ชิ้นทันที!</p>
+    </div>
+
+    <div class="perk-card">
+      <div class="perk-icon">🎁</div>
+      <div class="perk-text">
+        <h3 id="txtPerkTitle">สิทธิพิเศษสมาชิก</h3>
+        <p id="txtPerkDesc">ซื้อ Onigiri 1 ชิ้น = 1 แต้ม • สะสมครบ 10 แต้ม แลกรับข้าวปั้นฟรี 1 ชิ้น</p>
+      </div>
+    </div>
+
+    <div class="tab-switch">
+      <button class="active" id="tabBtnReg" onclick="switchTab('reg')">สมัครสมาชิกใหม่</button>
+      <button id="tabBtnCheck" onclick="switchTab('check')">เช็คแต้มสะสม</button>
+    </div>
+
+    <!-- Registration Section -->
+    <div class="card" id="regSection">
+      <div id="regMsg" class="msg-box"></div>
+      <form id="regForm" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label class="form-label" for="regPhone"><span id="lblPhone">เบอร์โทรศัพท์</span> <span class="req">*</span></label>
+          <input type="tel" id="regPhone" class="form-input" placeholder="0812345678" maxlength="10" inputmode="numeric" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regName"><span id="lblFullName">ชื่อ - นามสกุล หรือ ชื่อเล่น</span> <span class="req">*</span></label>
+          <input type="text" id="regName" class="form-input" placeholder="เช่น น้องก้อย / John" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regBirthday"><span id="lblBirthday">วัน/เดือน/ปีเกิด (สำหรับรับโปรวันเกิด)</span></label>
+          <input type="date" id="regBirthday" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><span id="lblSex">เพศ</span></label>
+          <div class="sex-options">
+            <button type="button" class="sex-btn active" data-sex="female" onclick="selectSex(this)">หญิง</button>
+            <button type="button" class="sex-btn" data-sex="male" onclick="selectSex(this)">ชาย</button>
+            <button type="button" class="sex-btn" data-sex="unspecified" onclick="selectSex(this)">ไม่ระบุ</button>
+          </div>
+          <input type="hidden" id="regSex" value="female">
+        </div>
+
+        <button type="submit" id="btnSubmitReg" class="btn-submit">สมัครสมาชิก & รับแต้มสะสม</button>
+      </form>
+    </div>
+
+    <!-- Check Points Section -->
+    <div class="card" id="checkSection" style="display:none">
+      <div id="checkMsg" class="msg-box"></div>
+      <form id="checkForm" onsubmit="handleCheckPoints(event)">
+        <div class="form-group">
+          <label class="form-label" for="checkPhone"><span id="lblCheckPhone">กรอกเบอร์โทรศัพท์ที่ลงทะเบียน</span> <span class="req">*</span></label>
+          <input type="tel" id="checkPhone" class="form-input" placeholder="0812345678" maxlength="10" inputmode="numeric" required>
+        </div>
+        <button type="submit" id="btnSubmitCheck" class="btn-submit">ค้นหาแต้มสะสม</button>
+      </form>
+    </div>
+
+    <!-- Result / Member Card Display -->
+    <div id="resultSection" style="display:none">
+      <div class="member-card">
+        <div class="mc-header">
+          <div class="mc-brand">🍙 PANSOD MEMBER</div>
+          <div class="mc-badge" id="cardStatusBadge">MEMBER</div>
+        </div>
+        <div class="mc-name" id="cardName">-</div>
+        <div class="mc-phone" id="cardPhone">-</div>
+
+        <div class="mc-points-box">
+          <div class="mc-points-label" id="lblCardPoints">แต้มสะสมปัจจุบัน</div>
+          <div class="mc-points-val">
+            <span id="cardPointsVal" style="font-size:32px; font-weight:700; color:#fbbf24;">0</span>
+            <span id="lblPtsUnit">แต้ม (Points)</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="cardProgressFill" style="width: 0%;"></div>
+          </div>
+          <div class="progress-text" id="cardProgressText">อีก 10 แต้ม เพื่อรับฟรี 1 ข้าวปั้น</div>
+        </div>
+
+        <div class="mc-footer-tip" id="lblCardTip">
+          💡 เพียงแจ้งเบอร์โทรนี้กับพนักงานที่หน้าร้านเพื่อสะสมแต้มทุกครั้งที่สั่งซื้อ!
+        </div>
+      </div>
+
+      <button type="button" class="btn-action-alt" onclick="resetForm()" id="btnBack">กลับไปหน้าแรก</button>
+    </div>
+
+    <div class="footer">
+      © PANSOD Store • Japanese Rice Ball & Snacks
+    </div>
+  </div>
+
+  <script>
+    let currentLang = 'th';
+
+    const tData = {
+      th: {
+        title: 'สมาชิกสะสมแต้ม',
+        sub: 'กินข้าวปั้นครบ 10 ชิ้น รับฟรี 1 ชิ้นทันที!',
+        perkTitle: 'สิทธิพิเศษสมาชิก',
+        perkDesc: 'ซื้อ Onigiri 1 ชิ้น = 1 แต้ม • สะสมครบ 10 แต้ม แลกรับข้าวปั้นฟรี 1 ชิ้น',
+        tabReg: 'สมัครสมาชิกใหม่',
+        tabCheck: 'เช็คแต้มสะสม',
+        phone: 'เบอร์โทรศัพท์',
+        fullName: 'ชื่อ - นามสกุล หรือ ชื่อเล่น',
+        bday: 'วัน/เดือน/ปีเกิด (สำหรับรับโปรวันเกิด)',
+        sex: 'เพศ',
+        female: 'หญิง',
+        male: 'ชาย',
+        unspecified: 'ไม่ระบุ',
+        btnReg: 'สมัครสมาชิก & รับแต้มสะสม',
+        btnCheck: 'ค้นหาแต้มสะสม',
+        ptsUnit: 'แต้ม (Points)',
+        cardPoints: 'แต้มสะสมปัจจุบัน',
+        cardTip: '💡 เพียงแจ้งเบอร์โทรนี้กับพนักงานที่หน้าร้านเพื่อสะสมแต้มทุกครั้งที่สั่งซื้อ!',
+        back: 'กลับไปหน้าแรก',
+        morePts: 'อีก {n} แต้ม เพื่อรับฟรี 1 ข้าวปั้น 🍙',
+        readyRedeem: '🎉 คุณมีสิทธิ์แลกฟรีข้าวปั้น 1 ชิ้นแล้ว! แจ้งพนักงานเพื่อใช้สิทธิ์',
+        regSuccess: 'สมัครสมาชิกสำเร็จเรียบร้อย! ขอบคุณที่มาร่วมเป็นครอบครัว PANSOD',
+        notFound: 'ไม่พบข้อมูลเบอร์โทรศัพท์นี้ในระบบ กรุณาตรวจสอบอีกครั้งหรือสมัครสมาชิกใหม่',
+        alreadyRegistered: 'เบอร์โทรศัพท์นี้ลงทะเบียนแล้ว! แสดงแต้มสะสมด้านล่าง:'
+      },
+      en: {
+        title: 'Loyalty Rewards',
+        sub: 'Buy 10 Onigiri, Get 1 FREE!',
+        perkTitle: 'Member Perks',
+        perkDesc: '1 Onigiri = 1 Point • Collect 10 Points to redeem 1 Free Onigiri',
+        tabReg: 'New Registration',
+        tabCheck: 'Check Points',
+        phone: 'Phone Number',
+        fullName: 'Full Name / Nickname',
+        bday: 'Birthday (For birthday treats)',
+        sex: 'Gender',
+        female: 'Female',
+        male: 'Male',
+        unspecified: 'Other',
+        btnReg: 'Join & Collect Points',
+        btnCheck: 'Look Up Points',
+        ptsUnit: 'Points',
+        cardPoints: 'Current Balance',
+        cardTip: '💡 Give your phone number to the cashier when ordering to collect points!',
+        back: 'Back to Home',
+        morePts: '{n} more points to get 1 Free Onigiri 🍙',
+        readyRedeem: '🎉 You have 1 Free Onigiri ready to redeem! Tell cashier at storefront.',
+        regSuccess: 'Registration successful! Welcome to PANSOD Rewards.',
+        notFound: 'Phone number not found. Please check or register as a new member.',
+        alreadyRegistered: 'This phone number is already registered! Current points:'
+      }
+    };
+
+    function applyLanguage() {
+      const d = tData[currentLang];
+      document.getElementById('txtTitle').textContent = d.title;
+      document.getElementById('txtSub').textContent = d.sub;
+      document.getElementById('txtPerkTitle').textContent = d.perkTitle;
+      document.getElementById('txtPerkDesc').textContent = d.perkDesc;
+      document.getElementById('tabBtnReg').textContent = d.tabReg;
+      document.getElementById('tabBtnCheck').textContent = d.tabCheck;
+      document.getElementById('lblPhone').textContent = d.phone;
+      document.getElementById('lblCheckPhone').textContent = d.phone;
+      document.getElementById('lblFullName').textContent = d.fullName;
+      document.getElementById('lblBirthday').textContent = d.bday;
+      document.getElementById('lblSex').textContent = d.sex;
+      document.getElementById('btnSubmitReg').textContent = d.btnReg;
+      document.getElementById('btnSubmitCheck').textContent = d.btnCheck;
+      document.getElementById('lblPtsUnit').textContent = d.ptsUnit;
+      document.getElementById('lblCardPoints').textContent = d.cardPoints;
+      document.getElementById('lblCardTip').textContent = d.cardTip;
+      document.getElementById('btnBack').textContent = d.back;
+
+      const sexBtns = document.querySelectorAll('.sex-btn');
+      if (sexBtns[0]) sexBtns[0].textContent = d.female;
+      if (sexBtns[1]) sexBtns[1].textContent = d.male;
+      if (sexBtns[2]) sexBtns[2].textContent = d.unspecified;
+    }
+
+    function toggleRegLang() {
+      currentLang = currentLang === 'th' ? 'en' : 'th';
+      applyLanguage();
+    }
+
+    function switchTab(tab) {
+      document.getElementById('regMsg').style.display = 'none';
+      document.getElementById('checkMsg').style.display = 'none';
+      document.getElementById('resultSection').style.display = 'none';
+
+      if (tab === 'reg') {
+        document.getElementById('tabBtnReg').classList.add('active');
+        document.getElementById('tabBtnCheck').classList.remove('active');
+        document.getElementById('regSection').style.display = 'block';
+        document.getElementById('checkSection').style.display = 'none';
+      } else {
+        document.getElementById('tabBtnReg').classList.remove('active');
+        document.getElementById('tabBtnCheck').classList.add('active');
+        document.getElementById('regSection').style.display = 'none';
+        document.getElementById('checkSection').style.display = 'block';
+      }
+    }
+
+    function selectSex(btn) {
+      document.querySelectorAll('.sex-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('regSex').value = btn.dataset.sex;
+    }
+
+    function formatPhone(p) {
+      if (!p) return '';
+      const clean = p.replace(/\D/g, '');
+      if (clean.length === 10) {
+        return clean.slice(0,3) + '-' + clean.slice(3,6) + '-' + clean.slice(6);
+      }
+      return clean;
+    }
+
+    function showMemberCard(cust) {
+      document.getElementById('regSection').style.display = 'none';
+      document.getElementById('checkSection').style.display = 'none';
+      document.getElementById('resultSection').style.display = 'block';
+
+      document.getElementById('cardName').textContent = cust.name || 'Member';
+      document.getElementById('cardPhone').textContent = formatPhone(cust.phone);
+      
+      const pts = cust.points || 0;
+      document.getElementById('cardPointsVal').textContent = pts;
+
+      const progress = Math.min(100, (pts % 10) * 10);
+      document.getElementById('cardProgressFill').style.width = (pts >= 10 ? 100 : progress) + '%';
+
+      const d = tData[currentLang];
+      if (pts >= 10) {
+        document.getElementById('cardProgressText').textContent = d.readyRedeem;
+      } else {
+        const remaining = 10 - (pts % 10);
+        document.getElementById('cardProgressText').textContent = d.morePts.replace('{n}', remaining);
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const msg = document.getElementById('regMsg');
+      const btn = document.getElementById('btnSubmitReg');
+      msg.className = 'msg-box';
+      msg.style.display = 'none';
+
+      const phone = document.getElementById('regPhone').value.trim();
+      const name = document.getElementById('regName').value.trim();
+      const birthday = document.getElementById('regBirthday').value;
+      const sex = document.getElementById('regSex').value;
+
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      try {
+        const res = await fetch('/api/customers/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, name, birthday, sex })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          if (data.data) {
+            // Already registered, show their card
+            alert(tData[currentLang].alreadyRegistered);
+            showMemberCard(data.data);
+            return;
+          }
+          msg.textContent = data.error || 'Registration failed';
+          msg.className = 'msg-box error';
+          msg.style.display = 'block';
+          return;
+        }
+
+        showMemberCard(data.data);
+      } catch (err) {
+        msg.textContent = 'Connection error. Please try again.';
+        msg.className = 'msg-box error';
+        msg.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        applyLanguage();
+      }
+    }
+
+    async function handleCheckPoints(e) {
+      e.preventDefault();
+      const msg = document.getElementById('checkMsg');
+      const btn = document.getElementById('btnSubmitCheck');
+      msg.className = 'msg-box';
+      msg.style.display = 'none';
+
+      const phone = document.getElementById('checkPhone').value.trim();
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      try {
+        const res = await fetch('/api/customers/lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone })
+        });
+        const data = await res.json();
+
+        if (!data.success || !data.data) {
+          msg.textContent = tData[currentLang].notFound;
+          msg.className = 'msg-box error';
+          msg.style.display = 'block';
+          return;
+        }
+
+        showMemberCard(data.data);
+      } catch (err) {
+        msg.textContent = 'Connection error. Please try again.';
+        msg.className = 'msg-box error';
+        msg.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        applyLanguage();
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('regForm').reset();
+      document.getElementById('checkForm').reset();
+      switchTab('reg');
+    }
+
+    applyLanguage();
+  </script>
+</body>
+</html>
