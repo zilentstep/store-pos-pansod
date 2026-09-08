@@ -410,7 +410,7 @@
 </head>
 <body>
 
-  <button class="lang-btn" id="regLangBtn" onclick="toggleRegLang()">TH / EN</button>
+  <button class="lang-btn" id="regLangBtn" onclick="toggleRegLang()">TH / EN / ZH / RU</button>
 
   <div class="container">
     <div class="header">
@@ -570,6 +570,58 @@
         regSuccess: 'Registration successful! Welcome to PANSOD Rewards.',
         notFound: 'Phone number not found. Please check or register as a new member.',
         alreadyRegistered: 'This phone number is already registered! Current points:'
+      },
+      zh: {
+        title: '忠诚奖励计划',
+        sub: '买10个饭团，免费送1个！',
+        perkTitle: '会员福利',
+        perkDesc: '1个饭团 = 1积分 • 积累10积分可兑换1个免费饭团',
+        tabReg: '新会员注册',
+        tabCheck: '查询积分',
+        phone: '电话号码',
+        fullName: '姓名/昵称',
+        bday: '生日（获取生日礼遇）',
+        sex: '性别',
+        female: '女',
+        male: '男',
+        unspecified: '其他',
+        btnReg: '加入并积累积分',
+        btnCheck: '查询积分',
+        ptsUnit: '积分',
+        cardPoints: '当前积分',
+        cardTip: '💡 点餐时告知店员您的电话号码以积累积分！',
+        back: '返回首页',
+        morePts: '再积 {n} 分即可获得1个免费饭团 🍙',
+        readyRedeem: '🎉 您有1个免费饭团可兑换！请告知店员。',
+        regSuccess: '注册成功！欢迎加入PANSOD大家庭。',
+        notFound: '未找到该电话号码。请核对或注册新会员。',
+        alreadyRegistered: '该电话号码已注册！当前积分：'
+      },
+      ru: {
+        title: 'Программа лояльности',
+        sub: 'Купите 10 онигири, получите 1 БЕСПЛАТНО!',
+        perkTitle: 'Преимущества участника',
+        perkDesc: '1 онигири = 1 балл • Соберите 10 баллов, чтобы получить 1 онигири бесплатно',
+        tabReg: 'Новая регистрация',
+        tabCheck: 'Проверить баллы',
+        phone: 'Номер телефона',
+        fullName: 'ФИО / Никнейм',
+        bday: 'День рождения (для подарков)',
+        sex: 'Пол',
+        female: 'Женский',
+        male: 'Мужской',
+        unspecified: 'Другое',
+        btnReg: 'Присоединиться и копить баллы',
+        btnCheck: 'Поиск баллов',
+        ptsUnit: 'Баллы',
+        cardPoints: 'Текущий баланс',
+        cardTip: '💡 Назовите свой номер телефона кассиру при заказе, чтобы накопить баллы!',
+        back: 'Назад на главную',
+        morePts: 'Еще {n} баллов, чтобы получить 1 онигири бесплатно 🍙',
+        readyRedeem: '🎉 У вас есть 1 бесплатный онигири! Сообщите кассиру.',
+        regSuccess: 'Регистрация прошла успешно! Добро пожаловать в PANSOD Rewards.',
+        notFound: 'Номер телефона не найден. Пожалуйста, проверьте или зарегистрируйтесь.',
+        alreadyRegistered: 'Этот номер телефона уже зарегистрирован! Текущие баллы:'
       }
     };
 
@@ -600,7 +652,11 @@
     }
 
     function toggleRegLang() {
-      currentLang = currentLang === 'th' ? 'en' : 'th';
+      const langs = ['th', 'en', 'zh', 'ru'];
+      let nextIndex = langs.indexOf(currentLang) + 1;
+      if (nextIndex >= langs.length) nextIndex = 0;
+      currentLang = langs[nextIndex];
+      document.getElementById('regLangBtn').textContent = langs.map(l => l.toUpperCase()).join(' / ');
       applyLanguage();
     }
 

@@ -66,14 +66,20 @@ export async function onRequest(context) {
     const gmt7 = new Date(now.getTime() + offset * 60 * 1000);
     const createdAt = reqCreatedAt || gmt7.toISOString().replace('Z', '+07:00');
 
-    // Calculate onigiri points earned (1 Onigiri = 1 point)
-    let pointsEarned = 0;
+    // Calculate total onigiri count
+    let totalOnigiriCount = 0;
     for (const item of items) {
       const mi = await env.DB.prepare("SELECT cat FROM menu_items WHERE en_name = ?").bind(item.name).first();
       if (mi && mi.cat === 'Onigiri') {
-        pointsEarned += (item.qty || 1);
+        totalOnigiriCount += (item.qty || 1);
       }
     }
+
+    // Points earned = Total Onigiri - Free Onigiri
+    // Since 10 points = 1 free onigiri, we divide pointsRedeemed by 10 to get free Onigiri count
+    // NOTE: This assumes pointsRedeemed is always a multiple of 10
+    const freeOnigiriCount = actualPointsRedeemed / 10;
+    let pointsEarned = Math.max(0, totalOnigiriCount - freeOnigiriCount);
 
     let customerPoints = 0;
     let actualPointsRedeemed = 0;
