@@ -75,6 +75,14 @@ export async function onRequest(context) {
       }
     }
 
+    let actualPointsRedeemed = 0;
+    if (customerId && pointsRedeemed > 0) {
+      const customer = await env.DB.prepare("SELECT points FROM customers WHERE id = ?").bind(customerId).first();
+      if (customer && (customer.points || 0) >= pointsRedeemed) {
+        actualPointsRedeemed = pointsRedeemed;
+      }
+    }
+
     // Points earned = Total Onigiri - Free Onigiri
     // Since 10 points = 1 free onigiri, we divide pointsRedeemed by 10 to get free Onigiri count
     // NOTE: This assumes pointsRedeemed is always a multiple of 10
@@ -82,15 +90,10 @@ export async function onRequest(context) {
     let pointsEarned = Math.max(0, totalOnigiriCount - freeOnigiriCount);
 
     let customerPoints = 0;
-    let actualPointsRedeemed = 0;
 
     if (customerId) {
       const customer = await env.DB.prepare("SELECT id, points FROM customers WHERE id = ?").bind(customerId).first();
       if (customer) {
-        if (pointsRedeemed > 0 && (customer.points || 0) >= pointsRedeemed) {
-          actualPointsRedeemed = pointsRedeemed;
-        }
-
         const newBalance = Math.max(0, (customer.points || 0) - actualPointsRedeemed + pointsEarned);
         customerPoints = newBalance;
 
