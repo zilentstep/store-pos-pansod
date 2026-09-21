@@ -129,6 +129,8 @@ let i18n = {
     printDiscount: 'Discount',
     printTotal: 'TOTAL',
     printTagline: 'Onigiri • Sides • Drinks',
+    printBoth: 'BOTH',
+    selectPrintType: 'Select Print Type',
     printThanks: 'Thank you! Please come again.',
     salesToday: 'Today',
     salesYesterday: 'Yesterday',
@@ -271,6 +273,8 @@ let i18n = {
     printDiscount: 'ส่วนลด',
     printTotal: 'รวมทั้งหมด',
     printTagline: 'โอนิกิริ • เครื่องเคียง • เครื่องดื่ม',
+    printBoth: 'ทั้งสองอย่าง',
+    selectPrintType: 'เลือกรูปแบบการพิมพ์',
     printThanks: 'ขอบคุณครับ ยินดีต้อนรับอีกครั้ง',
     viewCart: 'ดูตะกร้า ➔',
     viewSelected: 'ดูที่เลือก ➔',
@@ -840,17 +844,43 @@ function kitchenHTML(o) {
     + '</div>';
 }
 
-function printOrderBoth(o) {
+let currentPrintOrder = null;
+
+function showPrintModal(o) {
+  currentPrintOrder = o;
+  document.getElementById('printOptionsModal').style.display = 'flex';
+}
+
+function closePrintModal() {
+  document.getElementById('printOptionsModal').style.display = 'none';
+  currentPrintOrder = null;
+}
+
+function doPrint(o, type) {
+  if (!o) return;
   const area = document.getElementById('printArea');
   if (!area) return;
-  area.innerHTML = kitchenHTML(o) + '<div class="pr-page-break"></div>' + receiptHTML(o);
+  
+  if (type === 'kitchen') {
+    area.innerHTML = kitchenHTML(o);
+  } else if (type === 'receipt') {
+    area.innerHTML = receiptHTML(o);
+  } else {
+    area.innerHTML = kitchenHTML(o) + '<div class="pr-page-break"></div>' + receiptHTML(o);
+  }
+  
   window.print();
+  closePrintModal();
+}
+
+function printOrderBoth(o) {
+  doPrint(o, 'both');
 }
 
 function reprintOrder(id) {
   const o = salesOrders.find(function(x) { return x.id === id; });
   if (!o) return;
-  printOrderBoth(o);
+  showPrintModal(o);
 }
 
 function setSalesRange(btn) {
