@@ -23,37 +23,37 @@ export async function onRequest(context) {
     }
 
     const orderRows = await env.DB.prepare(
-      `SELECT date(created_at) as d,
+      `SELECT substr(created_at, 1, 10) as d,
               COUNT(*) as cnt,
               SUM(final_total) as rev,
               SUM(discount) as disc,
               SUM(CASE WHEN payment_method = 'cash' THEN final_total ELSE 0 END) as cash,
               SUM(CASE WHEN payment_method = 'qr' THEN final_total ELSE 0 END) as qr
        FROM orders
-       WHERE date(created_at) >= ? AND date(created_at) <= ?
+       WHERE created_at >= ? AND created_at <= ?
        GROUP BY d ORDER BY d`
-    ).bind(startDate, endDate).all();
+    ).bind(startDate + ' 00:00:00', endDate + ' 23:59:59').all();
 
     const orderItemsRows = await env.DB.prepare(
-      `SELECT date(o.created_at) as d, SUM(oi.qty) as items
+      `SELECT substr(o.created_at, 1, 10) as d, SUM(oi.qty) as items
        FROM orders o JOIN order_items oi ON oi.order_id = o.id
-       WHERE date(o.created_at) >= ? AND date(o.created_at) <= ?
+       WHERE o.created_at >= ? AND o.created_at <= ?
        GROUP BY d ORDER BY d`
-    ).bind(startDate, endDate).all();
+    ).bind(startDate + ' 00:00:00', endDate + ' 23:59:59').all();
 
     const grabRows = await env.DB.prepare(
-      `SELECT date(created_at) as d, COUNT(*) as cnt
+      `SELECT substr(created_at, 1, 10) as d, COUNT(*) as cnt
        FROM grab_orders
-       WHERE date(created_at) >= ? AND date(created_at) <= ?
+       WHERE created_at >= ? AND created_at <= ?
        GROUP BY d ORDER BY d`
-    ).bind(startDate, endDate).all();
+    ).bind(startDate + ' 00:00:00', endDate + ' 23:59:59').all();
 
     const grabItemsRows = await env.DB.prepare(
-      `SELECT date(go.created_at) as d, SUM(goi.qty) as items
+      `SELECT substr(go.created_at, 1, 10) as d, SUM(goi.qty) as items
        FROM grab_orders go JOIN grab_order_items goi ON goi.grab_order_id = go.id
-       WHERE date(go.created_at) >= ? AND date(go.created_at) <= ?
+       WHERE go.created_at >= ? AND go.created_at <= ?
        GROUP BY d ORDER BY d`
-    ).bind(startDate, endDate).all();
+    ).bind(startDate + ' 00:00:00', endDate + ' 23:59:59').all();
 
     const byDay = {};
     for (const r of orderRows.results) byDay[r.d] = Object.assign({ cnt: 0, rev: 0, disc: 0, cash: 0, qr: 0, items: 0, grabCnt: 0, grabItems: 0 }, r);

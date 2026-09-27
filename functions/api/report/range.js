@@ -24,21 +24,21 @@ export async function onRequest(context) {
     function getMenu(enName) { return menuItemsMap[enName] || null; }
 
     const orders = await env.DB.prepare(
-      `SELECT * FROM orders WHERE date(created_at) >= ? AND date(created_at) <= ?`
-    ).bind(startDate, endDate).all();
+      `SELECT * FROM orders WHERE created_at >= ? AND created_at <= ?`
+    ).bind(startDate + ' 00:00:00', endDate + ' 23:59:59').all();
 
     const orderItemsRes = await env.DB.prepare(
-      `SELECT oi.* FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE date(o.created_at) >= ? AND date(o.created_at) <= ?`
-    ).bind(startDate, endDate).all();
+      `SELECT oi.* FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.created_at >= ? AND o.created_at <= ?`
+    ).bind(startDate + ' 00:00:00', endDate + ' 23:59:59').all();
     const orderItems = orderItemsRes.results;
 
     const grabOrders = await env.DB.prepare(
-      `SELECT * FROM grab_orders WHERE date(created_at) >= ? AND date(created_at) <= ?`
-    ).bind(startDate, endDate).all();
+      `SELECT * FROM grab_orders WHERE created_at >= ? AND created_at <= ?`
+    ).bind(startDate + ' 00:00:00', endDate + ' 23:59:59').all();
 
     const grabItemsRes = await env.DB.prepare(
-      `SELECT goi.* FROM grab_order_items goi JOIN grab_orders go ON go.id = goi.grab_order_id WHERE date(go.created_at) >= ? AND date(go.created_at) <= ?`
-    ).bind(startDate, endDate).all();
+      `SELECT goi.* FROM grab_order_items goi JOIN grab_orders go ON go.id = goi.grab_order_id WHERE go.created_at >= ? AND go.created_at <= ?`
+    ).bind(startDate + ' 00:00:00', endDate + ' 23:59:59').all();
     const grabItems = grabItemsRes.results;
 
     const totalOrders = orders.results.length;

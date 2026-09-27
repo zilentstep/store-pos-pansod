@@ -29,9 +29,9 @@ export async function onRequest(context) {
       `SELECT g.*, c.name as customer_name, c.phone as customer_phone
        FROM grab_orders g
        LEFT JOIN customers c ON g.customer_id = c.id
-       WHERE date(g.created_at) = ?
+       WHERE g.created_at >= ? AND g.created_at <= ?
        ORDER BY g.id DESC`
-    ).bind(date).all();
+    ).bind(date + ' 00:00:00', date + ' 23:59:59').all();
 
     const ordersWithItems = [];
 
