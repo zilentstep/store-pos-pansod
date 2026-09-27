@@ -19,22 +19,22 @@ export async function onRequest(context) {
 
     // --- In-store orders ---
     const orders = await env.DB.prepare(
-      `SELECT * FROM orders WHERE created_at >= ? AND created_at <= ?`
-    ).bind(date + ' 00:00:00', date + ' 23:59:59').all();
+      `SELECT * FROM orders WHERE created_at LIKE ?`
+    ).bind(date + '%').all();
 
     const orderItemsRes = await env.DB.prepare(
-      `SELECT oi.* FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.created_at >= ? AND o.created_at <= ?`
-    ).bind(date + ' 00:00:00', date + ' 23:59:59').all();
+      `SELECT oi.* FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.created_at LIKE ?`
+    ).bind(date + '%').all();
     const orderItems = orderItemsRes.results;
 
     // --- Grab orders ---
     const grabOrders = await env.DB.prepare(
-      `SELECT * FROM grab_orders WHERE created_at >= ? AND created_at <= ?`
-    ).bind(date + ' 00:00:00', date + ' 23:59:59').all();
+      `SELECT * FROM grab_orders WHERE created_at LIKE ?`
+    ).bind(date + '%').all();
 
     const grabItemsRes = await env.DB.prepare(
-      `SELECT goi.* FROM grab_order_items goi JOIN grab_orders go ON go.id = goi.grab_order_id WHERE go.created_at >= ? AND go.created_at <= ?`
-    ).bind(date + ' 00:00:00', date + ' 23:59:59').all();
+      `SELECT goi.* FROM grab_order_items goi JOIN grab_orders go ON go.id = goi.grab_order_id WHERE go.created_at LIKE ?`
+    ).bind(date + '%').all();
     const grabItems = grabItemsRes.results;
 
     // --- Compute stats ---

@@ -32,9 +32,9 @@ export async function onRequest(context) {
       `SELECT o.*, c.name as customer_name, c.phone as customer_phone
        FROM orders o
        LEFT JOIN customers c ON o.customer_id = c.id
-       WHERE o.created_at >= ? AND o.created_at <= ?
+       WHERE o.created_at LIKE ?
        ORDER BY o.id DESC`
-    ).bind(startDate + ' 00:00:00', endDate + ' 23:59:59').all();
+    ).bind(startDate + '%').all();
 
     const ordersWithItems = [];
 
